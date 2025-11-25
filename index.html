@@ -59,35 +59,46 @@
     <div class="grid" id="grid"></div>
 
     <div class="botones">
-        <button id="guardarBtn">Guardar estado</button>
-        <button id="borrarBtn">Borrar todo</button>
+        <button id="guardarBtn">Guardar estado (descargar JSON)</button>
     </div>
 
     <script>
         const grid = document.getElementById("grid");
 
-        // Cargar estado guardado
-        const estadoGuardado = JSON.parse(localStorage.getItem("boletos")) || [];
+        // ⬇️ 1. Cargar los boletos desde boletos.json
+        async function cargarBoletos() {
+            try {
+                const respuesta = await fetch("boletos.json");
+                const datos = await respuesta.json();
 
-        // Crear 30 boletos
-        for (let i = 1; i <= 30; i++) {
-            const btn = document.createElement("div");
-            btn.classList.add("boleto");
-            btn.textContent = i;
+                const ocupados = datos.ocupados || [];
 
-            // Recuperar estado guardado
-            if (estadoGuardado.includes(i)) {
-                btn.classList.add("seleccionado");
+                // Crear 30 boletos
+                for (let i = 1; i <= 30; i++) {
+                    const btn = document.createElement("div");
+                    btn.classList.add("boleto");
+                    btn.textContent = i;
+
+                    // Si está en el JSON → pintarlo rojo
+                    if (ocupados.includes(i)) {
+                        btn.classList.add("seleccionado");
+                    }
+
+                    btn.addEventListener("click", () => {
+                        btn.classList.toggle("seleccionado");
+                    });
+
+                    grid.appendChild(btn);
+                }
+
+            } catch (error) {
+                console.error("Error al cargar boletos.json:", error);
             }
-
-            btn.addEventListener("click", () => {
-                btn.classList.toggle("seleccionado");
-            });
-
-            grid.appendChild(btn);
         }
 
-        // Guardar estado
+        cargarBoletos();
+
+        // ⬇️ 2. Botón para descargar un nuevo boletos.json
         document.getElementById("guardarBtn").addEventListener("click", () => {
             const seleccionados = [];
 
@@ -97,20 +108,20 @@
                 }
             });
 
-            localStorage.setItem("boletos", JSON.stringify(seleccionados));
+            const datos = {
+                ocupados: seleccionados
+            };
 
-            alert("Estado guardado correctamente");
-        });
+            // Crear archivo para descargar
+            const archivo = new Blob([JSON.stringify(datos, null, 4)], { type: "application/json" });
+            const url = URL.createObjectURL(archivo);
 
-        // Borrar todo
-        document.getElementById("borrarBtn").addEventListener("click", () => {
-            localStorage.removeItem("boletos");
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "boletos.json";
+            a.click();
 
-            document.querySelectorAll(".boleto").forEach(b => {
-                b.classList.remove("seleccionado");
-            });
-
-            alert("Todos los boletos fueron reiniciados");
+            URL.revokeObjectURL(url);
         });
     </script>
 </body>
