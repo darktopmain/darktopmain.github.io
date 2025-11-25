@@ -18,7 +18,7 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr); /* 6 por fila */
+            grid-template-columns: repeat(6, 1fr);
             gap: 10px;
             max-width: 400px;
             margin: auto;
@@ -38,18 +38,36 @@
         .boleto.seleccionado {
             background: red;
         }
+
+        .botones {
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin: 5px;
+        }
     </style>
 </head>
 
 <body>
-    <h1>Selecciona tu boleto</h1>
+    <h1>Selecciona tus boletos</h1>
 
-    <div class="grid">
-        <!-- Se crearán 30 boletos con JS -->
+    <div class="grid" id="grid"></div>
+
+    <div class="botones">
+        <button id="guardarBtn">Guardar estado</button>
+        <button id="borrarBtn">Borrar todo</button>
     </div>
 
     <script>
-        const grid = document.querySelector(".grid");
+        const grid = document.getElementById("grid");
+
+        // Cargar estado guardado
+        const estadoGuardado = JSON.parse(localStorage.getItem("boletos")) || [];
 
         // Crear 30 boletos
         for (let i = 1; i <= 30; i++) {
@@ -57,13 +75,43 @@
             btn.classList.add("boleto");
             btn.textContent = i;
 
-            // Evento de click para cambiar color
+            // Recuperar estado guardado
+            if (estadoGuardado.includes(i)) {
+                btn.classList.add("seleccionado");
+            }
+
             btn.addEventListener("click", () => {
                 btn.classList.toggle("seleccionado");
             });
 
             grid.appendChild(btn);
         }
+
+        // Guardar estado
+        document.getElementById("guardarBtn").addEventListener("click", () => {
+            const seleccionados = [];
+
+            document.querySelectorAll(".boleto").forEach((b, index) => {
+                if (b.classList.contains("seleccionado")) {
+                    seleccionados.push(index + 1);
+                }
+            });
+
+            localStorage.setItem("boletos", JSON.stringify(seleccionados));
+
+            alert("Estado guardado correctamente");
+        });
+
+        // Borrar todo
+        document.getElementById("borrarBtn").addEventListener("click", () => {
+            localStorage.removeItem("boletos");
+
+            document.querySelectorAll(".boleto").forEach(b => {
+                b.classList.remove("seleccionado");
+            });
+
+            alert("Todos los boletos fueron reiniciados");
+        });
     </script>
 </body>
 </html>
