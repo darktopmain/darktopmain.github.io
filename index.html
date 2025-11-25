@@ -1,11 +1,69 @@
 <!DOCTYPE html>
 <html>
-    <body>
-        <h1>
-            Hello Wolrd
-        </h1>
-        <p>
-            hola .
-        </p>
-    </body>
+<head>
+    <meta charset="UTF-8">
+    <title>Boletos</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            background: #f4f4f4;
+            padding: 20px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr); /* 6 por fila */
+            gap: 10px;
+            max-width: 400px;
+            margin: auto;
+        }
+
+        .boleto {
+            padding: 15px;
+            background: green;
+            color: white;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            transition: 0.2s;
+        }
+
+        .boleto.seleccionado {
+            background: red;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Selecciona tu boleto</h1>
+
+    <div class="grid">
+        <!-- Se crearán 30 boletos con JS -->
+    </div>
+
+    <script>
+        const grid = document.querySelector(".grid");
+
+        // Crear 30 boletos
+        for (let i = 1; i <= 30; i++) {
+            const btn = document.createElement("div");
+            btn.classList.add("boleto");
+            btn.textContent = i;
+
+            // Evento de click para cambiar color
+            btn.addEventListener("click", () => {
+                btn.classList.toggle("seleccionado");
+            });
+
+            grid.appendChild(btn);
+        }
+    </script>
+</body>
 </html>
