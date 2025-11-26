@@ -68,7 +68,7 @@
         // ⬇️ 1. Cargar los boletos desde boletos.json
         async function cargarBoletos() {
             try {
-                const respuesta = await fetch("boletos.json");
+                const respuesta = await fetch("boletos.json?v=" + Date.now());
                 const datos = await respuesta.json();
 
                 const ocupados = datos.ocupados || [];
