@@ -18,10 +18,19 @@
 
         .grid {
             display: grid;
-            grid-template-columns: repeat(6, 1fr);
+            grid-template-columns: repeat(5, 1fr); /* 5 columnas */
             gap: 10px;
-            max-width: 400px;
+            width: 300px;
             margin: auto;
+
+            /* SCROLL */
+            max-height: 400px;
+            overflow-y: auto;
+            padding-right: 10px;
+
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #ccc;
         }
 
         .boleto {
@@ -65,19 +74,24 @@
     <script>
         const grid = document.getElementById("grid");
 
+        // Formato tipo 001, 002, 003
+        function formato(num) {
+            return num.toString().padStart(3, "0");
+        }
+
         // ⬇️ 1. Cargar los boletos desde boletos.json
         async function cargarBoletos() {
             try {
-                const respuesta = await fetch("boletos.json?v=" + Date.now());
+                const respuesta = await fetch("boletos.json");
                 const datos = await respuesta.json();
 
                 const ocupados = datos.ocupados || [];
 
-                // Crear 30 boletos
-                for (let i = 1; i <= 30; i++) {
+                // Crear 50 boletos
+                for (let i = 1; i <= 50; i++) {
                     const btn = document.createElement("div");
                     btn.classList.add("boleto");
-                    btn.textContent = i;
+                    btn.textContent = formato(i);  // número 3 dígitos
 
                     // Si está en el JSON → pintarlo rojo
                     if (ocupados.includes(i)) {
