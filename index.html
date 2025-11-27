@@ -1,21 +1,19 @@
 <!DOCTYPE html>
 <html>
-
-
 <head>
     <meta charset="UTF-8">
     <title>Boletos</title>
 
     <style>
 
+        /* Bloquear selección */
         .no-select {
-    color: black;        /* color negro */
-    user-select: none;   /* NO permite seleccionar */
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-}
-
+            color: black;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
 
         body {
             font-family: Arial;
@@ -28,14 +26,14 @@
             color: #333;
         }
 
-        /* 📌 GRID CON SCROLL */
+        /* GRID con scroll */
         .grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5 x 5 */
+            grid-template-columns: repeat(5, 1fr);
             gap: 10px;
             width: 300px;
-            max-height: 400px; /* Alto visible */
-            overflow-y: auto;  /* Scroll vertical */
+            max-height: 400px;
+            overflow-y: auto;
             margin: auto;
             padding-right: 10px;
         }
@@ -49,6 +47,13 @@
             cursor: pointer;
             user-select: none;
             transition: 0.2s;
+        }
+
+        /* Ocupado → negro y bloqueado */
+        .boleto.ocupado {
+            background: lightgray !important;
+            color: black !important;
+            cursor: not-allowed !important;
         }
 
         .boleto.seleccionado {
@@ -82,7 +87,6 @@
     <script>
         const grid = document.getElementById("grid");
 
-        // ⬇️ 1. Cargar los boletos desde boletos.json
         async function cargarBoletos() {
             try {
                 const respuesta = await fetch("boletos.json");
@@ -90,20 +94,22 @@
 
                 const ocupados = datos.ocupados || [];
 
-                // Crear 50 boletos
                 for (let i = 1; i <= 50; i++) {
                     const btn = document.createElement("div");
                     btn.classList.add("boleto");
-                    btn.textContent = i;
 
-                    // Si está en el JSON → pintarlo rojo
+                    // Mostrar número sin poder seleccionarlo
+                    btn.innerHTML = `<span class="no-select">${i}</span>`;
+
+                    // 🔥 Si está en el JSON → dejarlo negro y deshabilitado
                     if (ocupados.includes(i)) {
-                        btn.classList.add("seleccionado");
+                        btn.classList.add("ocupado");
+                    } else {
+                        // Solo los que NO están ocupados se pueden seleccionar
+                        btn.addEventListener("click", () => {
+                            btn.classList.toggle("seleccionado");
+                        });
                     }
-
-                    btn.addEventListener("click", () => {
-                        btn.classList.toggle("seleccionado");
-                    });
 
                     grid.appendChild(btn);
                 }
@@ -115,7 +121,7 @@
 
         cargarBoletos();
 
-        // ⬇️ 2. Descargar nuevo boletos.json
+        // Descargar JSON actualizado
         document.getElementById("guardarBtn").addEventListener("click", () => {
             const seleccionados = [];
 
@@ -125,9 +131,7 @@
                 }
             });
 
-            const datos = {
-                ocupados: seleccionados
-            };
+            const datos = { ocupados: seleccionados };
 
             const archivo = new Blob([JSON.stringify(datos, null, 4)], { type: "application/json" });
             const url = URL.createObjectURL(archivo);
@@ -140,7 +144,7 @@
             URL.revokeObjectURL(url);
         });
 
-        // ⬇️ 3. Enviar por WhatsApp
+        // WhatsApp
         document.getElementById("whatsappBtn").addEventListener("click", () => {
             const seleccionados = [];
 
@@ -155,13 +159,8 @@
                 return;
             }
 
-            // Número de WhatsApp (CÁMBIALO por el tuyo)
             const numero = "528993450951";
-
-            // Mensaje
             const mensaje = `Elegí los boletos: ${seleccionados.join(", ")}`;
-
-            // Crear enlace de WhatsApp
             const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
 
             window.open(url, "_blank");
