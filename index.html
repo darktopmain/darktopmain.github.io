@@ -181,7 +181,7 @@
     <div class="grid" id="grid"></div>
 
     <div class="botones">
-        <button id="guardarBtn">Guardar estado (descargar JSON)</button>
+      
         <button id="whatsappBtn">Enviar por WhatsApp</button>
     </div>
 <!-- SECCIÓN DE PAGO -->
@@ -223,28 +223,7 @@
 
         cargarBoletos();
 
-        // Descargar JSON actualizado
-        document.getElementById("guardarBtn").addEventListener("click", () => {
-            const seleccionados = [];
-
-            document.querySelectorAll(".boleto").forEach((b, index) => {
-                if (b.classList.contains("seleccionado")) {
-                    seleccionados.push(index + 1);
-                }
-            });
-
-            const datos = { ocupados: seleccionados };
-
-            const archivo = new Blob([JSON.stringify(datos, null, 4)], { type: "application/json" });
-            const url = URL.createObjectURL(archivo);
-
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "boletos.json";
-            a.click();
-
-            URL.revokeObjectURL(url);
-        });
+       
 
         // WhatsApp
         document.getElementById("whatsappBtn").addEventListener("click", () => {
