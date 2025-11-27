@@ -16,21 +16,16 @@
             color: #333;
         }
 
+        /* 📌 GRID CON SCROLL */
         .grid {
             display: grid;
-            grid-template-columns: repeat(5, 1fr); /* 5 columnas */
+            grid-template-columns: repeat(5, 1fr); /* 5 x 5 */
             gap: 10px;
             width: 300px;
+            max-height: 400px; /* Alto visible */
+            overflow-y: auto;  /* Scroll vertical */
             margin: auto;
-
-            /* SCROLL */
-            max-height: 400px;
-            overflow-y: auto;
             padding-right: 10px;
-
-            background: white;
-            border-radius: 10px;
-            border: 1px solid #ccc;
         }
 
         .boleto {
@@ -69,15 +64,11 @@
 
     <div class="botones">
         <button id="guardarBtn">Guardar estado (descargar JSON)</button>
+        <button id="whatsappBtn">Enviar por WhatsApp</button>
     </div>
 
     <script>
         const grid = document.getElementById("grid");
-
-        // Formato tipo 001, 002, 003
-        function formato(num) {
-            return num.toString().padStart(3, "0");
-        }
 
         // ⬇️ 1. Cargar los boletos desde boletos.json
         async function cargarBoletos() {
@@ -91,7 +82,7 @@
                 for (let i = 1; i <= 50; i++) {
                     const btn = document.createElement("div");
                     btn.classList.add("boleto");
-                    btn.textContent = formato(i);  // número 3 dígitos
+                    btn.textContent = i;
 
                     // Si está en el JSON → pintarlo rojo
                     if (ocupados.includes(i)) {
@@ -112,7 +103,7 @@
 
         cargarBoletos();
 
-        // ⬇️ 2. Botón para descargar un nuevo boletos.json
+        // ⬇️ 2. Descargar nuevo boletos.json
         document.getElementById("guardarBtn").addEventListener("click", () => {
             const seleccionados = [];
 
@@ -126,7 +117,6 @@
                 ocupados: seleccionados
             };
 
-            // Crear archivo para descargar
             const archivo = new Blob([JSON.stringify(datos, null, 4)], { type: "application/json" });
             const url = URL.createObjectURL(archivo);
 
@@ -137,6 +127,34 @@
 
             URL.revokeObjectURL(url);
         });
+
+        // ⬇️ 3. Enviar por WhatsApp
+        document.getElementById("whatsappBtn").addEventListener("click", () => {
+            const seleccionados = [];
+
+            document.querySelectorAll(".boleto").forEach((b, index) => {
+                if (b.classList.contains("seleccionado")) {
+                    seleccionados.push(index + 1);
+                }
+            });
+
+            if (seleccionados.length === 0) {
+                alert("No has seleccionado ningún boleto");
+                return;
+            }
+
+            // Número de WhatsApp (CÁMBIALO por el tuyo)
+            const numero = "528993450951";
+
+            // Mensaje
+            const mensaje = `Elegí los boletos: ${seleccionados.join(", ")}`;
+
+            // Crear enlace de WhatsApp
+            const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+            window.open(url, "_blank");
+        });
     </script>
+
 </body>
 </html>
