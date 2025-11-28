@@ -1,6 +1,232 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<meta charset="UTF-8">
+<title>Rifas & Asociados</title>
+
+<style>
+
+/* -------------------------- */
+/* ESTILOS GENERALES */
+/* -------------------------- */
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    background: linear-gradient(to bottom, #ffffff, #e8e8e8);
+    color: #333;
+}
+
+/* Contenedor general */
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Título principal */
+.main-title {
+    background: #000;
+    color: #fff;
+    padding: 15px;
+    font-size: 28px;
+    text-align: center;
+    border-radius: 8px;
+    letter-spacing: 1px;
+}
+
+/* Subtítulos */
+h3 {
+    text-align: center;
+    font-size: 22px;
+    margin-top: 25px;
+    color: #333;
+}
+
+/* -------------------------- */
+/* SECCIÓN DE PAGO */
+.payment-box {
+    border: 2px solid #c00000;
+    padding: 25px;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+    margin-top: 25px;
+}
+
+.payment-box h3 {
+    color: #c00000;
+    font-size: 20px;
+}
+
+.payment-list li {
+    font-size: 17px;
+    margin-bottom: 15px;
+}
+
+.payment-list hr {
+    border: 0;
+    border-top: 1px solid #ddd;
+}
+
+/* -------------------------- */
+/* BOLETOS */
+/* -------------------------- */
+
+.section-title {
+    margin-top: 40px;
+    font-size: 26px;
+    text-align: center;
+    color: #222;
+}
+
+/* grid moderno */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    width: 320px;
+    margin: 25px auto;
+    padding: 10px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 5px 18px rgba(0,0,0,0.1);
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Boleto disponible */
+.boleto {
+    padding: 15px;
+    background: #1a8d1a;
+    color: white;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+    user-select: none;
+}
+
+/* Ocupados */
+.boleto.ocupado {
+    background: #ccc !important;
+    color: #000 !important;
+    cursor: not-allowed !important;
+}
+
+/* Seleccionado */
+.boleto.seleccionado {
+    background: #d40000;
+}
+
+/* Botones WhatsApp */
+.btn {
+    padding: 12px 20px;
+    font-size: 18px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    margin-top: 15px;
+}
+
+.btn-whatsapp {
+    background: #25d366;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: block;
+    margin: 20px auto;
+}
+
+.btn-whatsapp:hover {
+    background: #1ebe5d;
+}
+
+/* Evitar copiar números */
+.no-select {
+    user-select: none;
+}
+
+</style>
+</head>
+
+<body>
+
+       <div style="text-align: center; margin-bottom: 20px;">
+        <img src="NOMBRE-DE-TU-IMAGEN.png" 
+             alt="Logo Rifas & Asociados" 
+             style="width: 300px; height: auto;">
+    </div>
+
+<div class="container">
+
+    <h2 class="main-title">RIFAS & ASOCIADOS</h2>
+
+    <h3>INFORMACIÓN DE PAGO</h3>
+
+    <p style="text-align:center; font-size:17px;">
+        Realiza tu pago en cualquiera de las siguientes cuentas y sube tu comprobante.
+    </p>
+
+    <!-- Caja de pago -->
+    <div class="payment-box">
+        <h3>EXCLUSIVO TRANSFERENCIAS Y CAJERO <br>
+            <span style="font-size:14px; color:#000;">COLOCAR TU NOMBRE EN CONCEPTO DE PAGO</span>
+        </h3>
+
+        <ul class="payment-list" style="list-style:none; padding:0;">
+            <li>
+                <b>BANCO:</b> BBVA <br>
+                <b>NOMBRE:</b> JOSE RITO CERCEDA VALLES <br>
+                <b>TARJETA:</b> 4152 3145 2848 0457
+                <hr>
+            </li>
+
+            <li>
+                <b>BANCO:</b> BBVA <br>
+                <b>NOMBRE:</b> CRISTHIAN OSIEL RODRÍGUEZ CASTILLO <br>
+                <b>TARJETA:</b> 4152 3142 2147 1702
+                <hr>
+            </li>
+
+            <li>
+                <b>BANCO:</b> BBVA <br>
+                <b>NOMBRE:</b> IVAN ALEJANDRO MANZANARES ÁVILA <br>
+                <b>TARJETA:</b> 4152 3145 1635 8333
+                <hr>
+            </li>
+
+            <li>
+                <b>BANCO:</b> BBVA <br>
+                <b>NOMBRE:</b> ANGEL GABRIEL JARAMILLO RAMOS <br>
+                <b>TARJETA:</b> 5579 2091 5338 1766
+                <hr>
+            </li>
+        </ul>
+    </div>
+
+    <p style="text-align:center; margin-top:20px; font-size:18px; font-weight:bold;">
+        ¿Dudas? Contáctanos
+    </p>
+
+    <p style="text-align:center; font-size:22px; color:#008f39; font-weight:bold;">
+        (899) 120 2011
+    </p>
+
+    <h2 class="section-title">Selecciona tus boletos</h2>
+
+    <div class="grid" id="grid"></div>
+
+    <button class="btn btn-whatsapp" id="whatsappBtn">Enviar por WhatsApp</button>
+
+</div>
+
+<!-- ----------------------- -->
+<!-- JAVASCRIPT DE BOLETOS -->
+<!-- ----------------------- -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
 <meta charset="utf-8">
 <title>Matriz grande - Rifas & Asociados</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
@@ -295,5 +521,9 @@ wsBtn.addEventListener('click', () => {
     renderGrid(rows, cols);
 })();
 </script>
+</body>
+</html>
+
+
 </body>
 </html>
