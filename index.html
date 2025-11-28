@@ -1,280 +1,299 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Rifas & Asociados</title>
-
+<meta charset="utf-8">
+<title>Matriz grande - Rifas & Asociados</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <style>
+    :root {
+        --cols: 15; /* valor inicial, adaptado por JS */
+    }
 
-/* -------------------------- */
-/* ESTILOS GENERALES */
-/* -------------------------- */
+    body {
+        font-family: "Segoe UI", Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background: #f4f6f8;
+        color: #222;
+    }
 
-body {
-    font-family: "Segoe UI", Arial, sans-serif;
-    margin: 0;
-    background: linear-gradient(to bottom, #ffffff, #e8e8e8);
-    color: #333;
-}
+    .container {
+        max-width: 1100px;
+        margin: 0 auto;
+    }
 
-/* Contenedor general */
-.container {
-    max-width: 900px;
-    margin: auto;
-    padding: 20px;
-}
+    .header {
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+    }
 
-/* Título principal */
-.main-title {
-    background: #000;
-    color: #fff;
-    padding: 15px;
-    font-size: 28px;
-    text-align: center;
-    border-radius: 8px;
-    letter-spacing: 1px;
-}
+    .title {
+        font-size: 24px;
+        font-weight:700;
+    }
 
-/* Subtítulos */
-h3 {
-    text-align: center;
-    font-size: 22px;
-    margin-top: 25px;
-    color: #333;
-}
+    .controls {
+        display:flex;
+        gap:8px;
+        align-items:center;
+    }
 
-/* -------------------------- */
-/* SECCIÓN DE PAGO */
-.payment-box {
-    border: 2px solid #c00000;
-    padding: 25px;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
-    margin-top: 25px;
-}
+    .controls input[type="number"] {
+        width:80px;
+        padding:6px;
+        border-radius:6px;
+        border:1px solid #ccc;
+    }
 
-.payment-box h3 {
-    color: #c00000;
-    font-size: 20px;
-}
+    .controls button {
+        padding:8px 12px;
+        border-radius:8px;
+        border:none;
+        background:#1a73e8;
+        color:#fff;
+        cursor:pointer;
+    }
 
-.payment-list li {
-    font-size: 17px;
-    margin-bottom: 15px;
-}
+    .info {
+        margin-top:12px;
+        color:#444;
+        font-size:14px;
+    }
 
-.payment-list hr {
-    border: 0;
-    border-top: 1px solid #ddd;
-}
+    /* Grid */
+    .grid-wrapper {
+        margin-top:18px;
+        background:#fff;
+        padding:12px;
+        border-radius:10px;
+        box-shadow:0 6px 20px rgba(0,0,0,0.08);
+    }
 
-/* -------------------------- */
-/* BOLETOS */
-/* -------------------------- */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(var(--cols), 1fr);
+        gap:8px;
+        max-height: 65vh;
+        overflow: auto;
+        padding:10px;
+    }
 
-.section-title {
-    margin-top: 40px;
-    font-size: 26px;
-    text-align: center;
-    color: #222;
-}
+    .cell {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        user-select: none;
+        height:44px;
+        border-radius:8px;
+        background:#1a8d1a;
+        color:#fff;
+        font-weight:600;
+        cursor:pointer;
+        transition: transform .06s ease, box-shadow .06s;
+        box-shadow: 0 2px 6px rgba(10,10,10,0.06);
+        font-size:13px;
+    }
 
-/* grid moderno */
-.grid {
-    display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 12px;
-    width: 320px;
-    margin: 25px auto;
-    padding: 10px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 5px 18px rgba(0,0,0,0.1);
-    max-height: 400px;
-    overflow-y: auto;
-}
+    .cell:active { transform: translateY(1px); }
 
-/* Boleto disponible */
-.boleto {
-    padding: 15px;
-    background: #1a8d1a;
-    color: white;
-    font-size: 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: 0.2s;
-    user-select: none;
-}
+    .cell.seleccionado { background:#d32f2f; } /* rojo */
+    .cell.ocupado {
+        background:#e9e9ea !important;
+        color:#111 !important;
+        cursor:not-allowed !important;
+        pointer-events:none;
+        box-shadow: none;
+    }
 
-/* Ocupados */
-.boleto.ocupado {
-    background: #ccc !important;
-    color: #000 !important;
-    cursor: not-allowed !important;
-}
+    /* footer controls */
+    .footer {
+        margin-top:14px;
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+        align-items:center;
+    }
 
-/* Seleccionado */
-.boleto.seleccionado {
-    background: #d40000;
-}
+    .btn {
+        padding:10px 14px;
+        border-radius:8px;
+        border:none;
+        cursor:pointer;
+        font-weight:600;
+    }
 
-/* Botones WhatsApp */
-.btn {
-    padding: 12px 20px;
-    font-size: 18px;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    margin-top: 15px;
-}
+    .btn-primary { background:#1a73e8; color:#fff; }
+    .btn-download { background:#555; color:#fff; }
+    .btn-ws { background:#25d366; color:white; }
+    .btn-clear { background:#f1f1f1; color:#111; border:1px solid #ddd; }
 
-.btn-whatsapp {
-    background: #25d366;
-    color: #fff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    display: block;
-    margin: 20px auto;
-}
-
-.btn-whatsapp:hover {
-    background: #1ebe5d;
-}
-
-/* Evitar copiar números */
-.no-select {
-    user-select: none;
-}
-
+    /* responsive */
+    @media (max-width: 700px) {
+        .cell { height:36px; font-size:12px; }
+    }
 </style>
 </head>
-
 <body>
-
-       <div style="text-align: center; margin-bottom: 20px;">
-        <img src="NOMBRE-DE-TU-IMAGEN.png" 
-             alt="Logo Rifas & Asociados" 
-             style="width: 300px; height: auto;">
-    </div>
-
 <div class="container">
+    <div class="header">
+        <div>
+            <div class="title">Rifas &amp; Asociados — Matriz grande</div>
+            <div class="info">Genera una matriz grande (p. ej. 15×100 = 1500 celdas). Las ocupadas vienen desde <code>boletos.json</code>.</div>
+        </div>
 
-    <h2 class="main-title">RIFAS & ASOCIADOS</h2>
-
-    <h3>INFORMACIÓN DE PAGO</h3>
-
-    <p style="text-align:center; font-size:17px;">
-        Realiza tu pago en cualquiera de las siguientes cuentas y sube tu comprobante.
-    </p>
-
-    <!-- Caja de pago -->
-    <div class="payment-box">
-        <h3>EXCLUSIVO TRANSFERENCIAS Y CAJERO <br>
-            <span style="font-size:14px; color:#000;">COLOCAR TU NOMBRE EN CONCEPTO DE PAGO</span>
-        </h3>
-
-        <ul class="payment-list" style="list-style:none; padding:0;">
-            <li>
-                <b>BANCO:</b> BBVA <br>
-                <b>NOMBRE:</b> JOSE RITO CERCEDA VALLES <br>
-                <b>TARJETA:</b> 4152 3145 2848 0457
-                <hr>
-            </li>
-
-            <li>
-                <b>BANCO:</b> BBVA <br>
-                <b>NOMBRE:</b> CRISTHIAN OSIEL RODRÍGUEZ CASTILLO <br>
-                <b>TARJETA:</b> 4152 3142 2147 1702
-                <hr>
-            </li>
-
-            <li>
-                <b>BANCO:</b> BBVA <br>
-                <b>NOMBRE:</b> IVAN ALEJANDRO MANZANARES ÁVILA <br>
-                <b>TARJETA:</b> 4152 3145 1635 8333
-                <hr>
-            </li>
-
-            <li>
-                <b>BANCO:</b> BBVA <br>
-                <b>NOMBRE:</b> ANGEL GABRIEL JARAMILLO RAMOS <br>
-                <b>TARJETA:</b> 5579 2091 5338 1766
-                <hr>
-            </li>
-        </ul>
+        <div class="controls">
+            <label>Filas:
+                <input id="rowsInput" type="number" min="1" value="100" title="Rows">
+            </label>
+            <label>Columnas:
+                <input id="colsInput" type="number" min="1" value="15" title="Columns">
+            </label>
+            <button id="generateBtn" title="Generar">Generar</button>
+        </div>
     </div>
 
-    <p style="text-align:center; margin-top:20px; font-size:18px; font-weight:bold;">
-        ¿Dudas? Contáctanos
-    </p>
+    <div class="grid-wrapper">
+        <div id="grid" class="grid" style="--cols:15"></div>
+    </div>
 
-    <p style="text-align:center; font-size:22px; color:#008f39; font-weight:bold;">
-        (899) 120 2011
-    </p>
-
-    <h2 class="section-title">Selecciona tus boletos</h2>
-
-    <div class="grid" id="grid"></div>
-
-    <button class="btn btn-whatsapp" id="whatsappBtn">Enviar por WhatsApp</button>
-
+    <div class="footer">
+        <button id="clearBtn" class="btn btn-clear">Limpiar selección</button>
+        <button id="downloadBtn" class="btn btn-download">Descargar JSON</button>
+        <button id="wsBtn" class="btn btn-ws">Enviar por WhatsApp</button>
+        <div style="margin-left:auto; color:#666; font-size:13px;">
+            Seleccionados: <span id="count">0</span>
+        </div>
+    </div>
 </div>
 
-<!-- ----------------------- -->
-<!-- JAVASCRIPT DE BOLETOS -->
-<!-- ----------------------- -->
-
 <script>
-const grid = document.getElementById("grid");
+/*
+  Configurable behavior:
+  - Cambia filas/columnas en los inputs y presiona "Generar".
+  - El archivo boletos.json debe contener {"ocupados":[n1,n2,...]} en la raíz.
+  - Las celdas ocupadas son no seleccionables.
+  - MAX recomendado: 5000; 1500 funciona bien.
+*/
 
-async function cargarBoletos() {
+const grid = document.getElementById('grid');
+const rowsInput = document.getElementById('rowsInput');
+const colsInput = document.getElementById('colsInput');
+const generateBtn = document.getElementById('generateBtn');
+const clearBtn = document.getElementById('clearBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const wsBtn = document.getElementById('wsBtn');
+const countSpan = document.getElementById('count');
+
+let occupiedSet = new Set();
+let totalCells = 0;
+
+function pad(num, length=4){ return String(num).padStart(length, '0'); }
+
+async function fetchOccupied() {
     try {
-        const r = await fetch("boletos.json");
-        const datos = await r.json();
-        const ocupados = datos.ocupados || [];
-
-        for (let i = 1; i <= 50; i++) {
-            const btn = document.createElement("div");
-            btn.classList.add("boleto");
-            btn.innerHTML = `<span class='no-select'>${i}</span>`;
-
-            if (ocupados.includes(i)) {
-                btn.classList.add("ocupado");
-            } else {
-                btn.addEventListener("click", () => {
-                    btn.classList.toggle("seleccionado");
-                });
-            }
-
-            grid.appendChild(btn);
-        }
-
+        const res = await fetch('boletos.json?v=' + Date.now()); // anti-cache
+        if (!res.ok) { console.warn('boletos.json not found (HTTP ' + res.status + ')'); return []; }
+        const data = await res.json();
+        return Array.isArray(data.ocupados) ? data.ocupados : [];
     } catch (e) {
-        console.error("Error al cargar JSON:", e);
+        console.warn('Error fetching boletos.json', e);
+        return [];
     }
 }
-cargarBoletos();
 
-document.getElementById("whatsappBtn").addEventListener("click", () => {
-    const seleccionados = [];
-    document.querySelectorAll(".boleto").forEach((b, index) => {
-        if (b.classList.contains("seleccionado")) {
-            seleccionados.push(index + 1);
+function renderGrid(rows, cols) {
+    // set CSS var for columns
+    grid.style.setProperty('--cols', cols);
+
+    // Clear
+    grid.innerHTML = '';
+    totalCells = rows * cols;
+
+    const frag = document.createDocumentFragment();
+
+    for (let i = 1; i <= totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+        cell.innerHTML = `<span class="no-select">${pad(i,String(totalCells).length)}</span>`;
+
+        if (occupiedSet.has(i)) {
+            cell.classList.add('ocupado');
+        } else {
+            cell.addEventListener('click', () => {
+                cell.classList.toggle('seleccionado');
+                updateCount();
+            });
         }
-    });
 
-    if (seleccionados.length === 0) {
-        alert("No seleccionaste boletos");
-        return;
+        frag.appendChild(cell);
     }
 
-    const numero = "528993450951";
-    const msg = "Elegí estos boletos: " + seleccionados.join(", ");
-    const url = `https://wa.me/${numero}?text=${encodeURIComponent(msg)}`;
+    grid.appendChild(frag);
+    updateCount();
+}
 
-    window.open(url, "_blank");
+function updateCount(){
+    const n = document.querySelectorAll('.cell.seleccionado').length;
+    countSpan.textContent = n;
+}
+
+generateBtn.addEventListener('click', async () => {
+    const rows = Math.max(1, parseInt(rowsInput.value) || 1);
+    const cols = Math.max(1, parseInt(colsInput.value) || 1);
+
+    // safety limit: avoid generating insane amounts unintentionally
+    const limit = 5000;
+    if (rows * cols > limit) {
+        if (!confirm(`Vas a generar ${rows*cols} celdas. Esto puede afectar el navegador. ¿Continuar?`)) return;
+    }
+
+    // reload occupied then render
+    const occ = await fetchOccupied();
+    occupiedSet = new Set(occ.filter(n => Number.isInteger(n) && n >=1));
+    renderGrid(rows, cols);
 });
-</script>
 
+// clear selection
+clearBtn.addEventListener('click', () => {
+    document.querySelectorAll('.cell.seleccionado').forEach(c => c.classList.remove('seleccionado'));
+    updateCount();
+});
+
+// download JSON of selected (ocupados)
+downloadBtn.addEventListener('click', () => {
+    const selected = Array.from(document.querySelectorAll('.cell.seleccionado')).map(c => Number(c.dataset.index));
+    const payload = { ocupados: selected };
+    const blob = new Blob([JSON.stringify(payload, null, 4)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'boletos.json';
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+// WhatsApp
+wsBtn.addEventListener('click', () => {
+    const selected = Array.from(document.querySelectorAll('.cell.seleccionado')).map(c => Number(c.dataset.index));
+    if (selected.length === 0) { alert('No has seleccionado ningún boleto'); return; }
+    const numero = '521111111111'; // reemplaza por tu número
+    const mensaje = `Elegí los boletos: ${selected.join(', ')}`;
+    const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+    window.open(url, '_blank');
+});
+
+// initial generation with default values
+(async function init(){
+    const rows = Math.max(1, parseInt(rowsInput.value) || 1);
+    const cols = Math.max(1, parseInt(colsInput.value) || 1);
+    const occ = await fetchOccupied();
+    occupiedSet = new Set(occ.filter(n => Number.isInteger(n) && n >=1));
+    renderGrid(rows, cols);
+})();
+</script>
 </body>
 </html>
