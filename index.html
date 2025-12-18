@@ -150,7 +150,7 @@
 
         async function cargarBoletos() {
             try {
-                const respuesta = await fetch("boletos.json");
+               const respuesta = await fetch("boletos.json?v=" + new Date().getTime());
                 const datos = await respuesta.json();
 
                 const ocupados = datos.ocupados || [];
