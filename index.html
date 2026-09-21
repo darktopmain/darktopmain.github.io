@@ -1,566 +1,1193 @@
 <!DOCTYPE html>
-
-<html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Rifa & Asociados</title>
 
-```
-<style>
+    <!-- SUPABASE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    body {
-        font-family: Arial, sans-serif;
-        background: linear-gradient(135deg, #ececec, #f7f7f7);
-        padding: 20px;
-        text-align: center;
-        color: #333;
-    }
+    <style>
 
-    h1, h2, h3 {
-        font-weight: bold;
-    }
+        * {
+            box-sizing: border-box;
+        }
 
-    /* ======== LOGO ======== */
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #111827, #1f2937);
+            color: white;
+        }
 
-    .logo-container {
-        width: 100%;
-        text-align: center;
-        margin-bottom: 25px;
-    }
+        /* =========================
+           ENCABEZADO
+        ========================= */
 
-    .logo-container img {
-        width: 260px;
-        border-radius: 12px;
-        box-shadow: 0 0 12px rgba(0,0,0,0.2);
-    }
+        header {
+            text-align: center;
+            padding: 25px 15px;
+        }
 
-    /* ======== TARJETAS ======== */
+        header img {
+            max-width: 220px;
+            height: auto;
+            margin-bottom: 10px;
+        }
 
-    .card {
-        background: #ffffff;
-        padding: 25px;
-        border-radius: 12px;
-        max-width: 900px;
-        margin: auto;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-    }
+        header h1 {
+            margin: 10px 0 5px;
+            font-size: 32px;
+        }
 
-    /* ======== GRID ======== */
+        header p {
+            margin: 0;
+            color: #d1d5db;
+        }
 
-    .grid {
-        display: grid;
-        grid-template-columns: repeat(15, 1fr);
-        gap: 8px;
-        width: 100%;
-        max-width: 1050px;
-        max-height: 450px;
-        overflow-y: auto;
-        margin: 30px auto 20px auto;
-        padding-right: 10px;
-    }
+        /* =========================
+           INFORMACIÓN DE PAGO
+        ========================= */
 
-    /* ======== BOLETOS ======== */
+        .pagos {
+            width: 95%;
+            max-width: 900px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px;
+        }
 
-    .boleto {
-        padding: 9px;
-        background: #1f8f1f;
-        color: white;
-        font-size: 14px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: 0.15s;
-        user-select: none;
-        font-weight: bold;
-    }
+        .pago {
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+        }
 
-    .boleto:hover {
-        background: #26aa26;
-    }
+        .pago h3 {
+            margin-top: 0;
+            color: #22c55e;
+        }
 
-    /* ======== BOLETO GRIS ======== */
+        .pago p {
+            margin: 7px 0;
+        }
 
-    .boleto.gris {
-        background: #cfcfcf !important;
-        color: #333 !important;
-    }
+        /* =========================
+           LEYENDA
+        ========================= */
 
-    /* ======== BOLETO SELECCIONADO PARA WHATSAPP ======== */
+        .leyenda {
+            width: 95%;
+            max-width: 900px;
+            margin: 20px auto;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
 
-    .boleto.seleccionado {
-        background: #d62b2b !important;
-        color: white !important;
-    }
+        .leyenda-item {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
 
-    /* ======== BOTONES ======== */
+        .color {
+            width: 22px;
+            height: 22px;
+            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.4);
+        }
 
-    button {
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: bold;
-    }
+        .verde {
+            background: #1f8f1f;
+        }
 
-    #whatsappBtn {
-        background: #25D366;
-        color: white;
-        padding: 12px 25px;
-        font-size: 20px;
-        box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-    }
+        .gris {
+            background: #cfcfcf;
+        }
 
-    #whatsappBtn:hover {
-        background: #1ebe5c;
-    }
+        .rojo {
+            background: #d62b2b;
+        }
 
-    #adminBtn {
-        background: #222;
-        color: white;
-        padding: 12px 25px;
-        font-size: 18px;
-        margin-bottom: 20px;
-    }
+        /* =========================
+           CONTENEDOR BOLETOS
+        ========================= */
 
-    #adminBtn:hover {
-        background: #444;
-    }
+        .contenedor-boletos {
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+            background: rgba(255,255,255,0.06);
+            padding: 15px;
+            border-radius: 15px;
+        }
 
-    /* ======== PANEL ADMIN ======== */
+        .titulo-boletos {
+            text-align: center;
+            margin-bottom: 15px;
+        }
 
-    #adminPanel {
-        display: none;
-        background: white;
-        max-width: 500px;
-        margin: 20px auto;
-        padding: 25px;
-        border-radius: 12px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-    }
+        .grid-boletos {
+            display: grid;
+            grid-template-columns: repeat(15, minmax(55px, 1fr));
+            gap: 5px;
+            max-height: 650px;
+            overflow-y: auto;
+            padding: 5px;
+        }
 
-    #adminPanel input {
-        width: 90%;
-        padding: 12px;
-        margin: 8px;
-        border: 1px solid #ccc;
-        border-radius: 6px;
-        font-size: 16px;
-    }
+        /* =========================
+           BOLETO
+        ========================= */
 
-    #loginBtn {
-        background: #1f8f1f;
-        color: white;
-        padding: 12px 25px;
-        font-size: 17px;
-    }
+        .boleto {
+            border: none;
+            border-radius: 6px;
+            padding: 10px 3px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.15s;
+            min-height: 42px;
+            color: white;
+        }
 
-    #logoutBtn {
-        background: #c62828;
-        color: white;
-        padding: 10px 20px;
-        font-size: 16px;
-        display: none;
-    }
+        .boleto.disponible {
+            background: #1f8f1f;
+        }
 
-    #adminStatus {
-        font-weight: bold;
-        margin-top: 10px;
-    }
+        .boleto.disponible:hover {
+            background: #27b327;
+            transform: scale(1.05);
+        }
 
-    /* ======== INFORMACIÓN ADMIN ======== */
+        .boleto.ocupado {
+            background: #cfcfcf;
+            color: #333;
+            cursor: not-allowed;
+        }
 
-    #adminInstructions {
-        display: none;
-        margin-top: 15px;
-        padding: 12px;
-        background: #eee;
-        border-radius: 8px;
-    }
+        .boleto.seleccionado {
+            background: #d62b2b;
+            color: white;
+        }
 
-</style>
-```
+        .boleto.seleccionado:hover {
+            background: #ef3b3b;
+        }
 
+        /* MODO ADMIN */
+
+        .admin-mode .boleto.ocupado {
+            cursor: pointer;
+        }
+
+        .admin-mode .boleto.disponible {
+            cursor: pointer;
+        }
+
+        .admin-mode .boleto:hover {
+            transform: scale(1.05);
+        }
+
+        /* =========================
+           WHATSAPP
+        ========================= */
+
+        .acciones {
+            text-align: center;
+            margin: 25px auto;
+        }
+
+        #btnWhatsapp {
+            border: none;
+            background: #25D366;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        #btnWhatsapp:hover {
+            background: #1ebe5d;
+        }
+
+        #contador {
+            margin-top: 10px;
+            color: #d1d5db;
+        }
+
+        /* =========================
+           ADMIN
+        ========================= */
+
+        .admin-panel {
+            width: 95%;
+            max-width: 500px;
+            margin: 30px auto;
+            background: rgba(255,255,255,0.08);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+        }
+
+        .admin-panel h2 {
+            margin-top: 0;
+        }
+
+        .admin-panel input {
+            width: 100%;
+            padding: 12px;
+            margin: 7px 0;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .admin-panel button {
+            border: none;
+            border-radius: 8px;
+            padding: 12px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+
+        #btnLogin {
+            background: #2563eb;
+            color: white;
+            width: 100%;
+        }
+
+        #btnLogin:hover {
+            background: #1d4ed8;
+        }
+
+        #btnLogout {
+            background: #dc2626;
+            color: white;
+        }
+
+        #btnLogout:hover {
+            background: #b91c1c;
+        }
+
+        #adminEstado {
+            margin-top: 12px;
+            font-weight: bold;
+        }
+
+        .admin-activo {
+            color: #22c55e;
+        }
+
+        .admin-inactivo {
+            color: #f87171;
+        }
+
+        /* =========================
+           CARGANDO
+        ========================= */
+
+        #cargando {
+            text-align: center;
+            padding: 25px;
+            font-size: 18px;
+        }
+
+        /* =========================
+           RESPONSIVE
+        ========================= */
+
+        @media (max-width: 800px) {
+
+            .grid-boletos {
+                grid-template-columns: repeat(10, minmax(50px, 1fr));
+            }
+
+        }
+
+        @media (max-width: 500px) {
+
+            header h1 {
+                font-size: 25px;
+            }
+
+            .grid-boletos {
+                grid-template-columns: repeat(5, minmax(50px, 1fr));
+            }
+
+            .boleto {
+                padding: 9px 2px;
+            }
+
+        }
+
+    </style>
 </head>
 
 <body>
 
-```
-<!-- LOGO -->
+    <!-- =========================
+         ENCABEZADO
+    ========================== -->
 
-<div class="logo-container">
-    <img src="NOMBRE-DE-TU-IMAGEN.png" alt="Logo">
-</div>
+    <header>
 
-<h1 style="margin-bottom:5px;">Rifas & Asociados</h1>
+        <img src="NOMBRE-DE-TU-IMAGEN.png" alt="Rifa & Asociados">
 
-<p style="font-size:18px; margin-top:0;">
-    Selecciona tus boletos disponibles
-</p>
+        <h1>Rifa & Asociados</h1>
 
+        <p>Selecciona tus boletos disponibles</p>
 
-<!-- ============================= -->
-<!-- BOTÓN ADMINISTRADOR -->
-<!-- ============================= -->
-
-<button id="adminBtn">
-    🔐 Administrador
-</button>
+    </header>
 
 
-<!-- ============================= -->
-<!-- PANEL DE LOGIN -->
-<!-- ============================= -->
+    <!-- =========================
+         PAGOS
+    ========================== -->
 
-<div id="adminPanel">
+    <section class="pagos">
 
-    <h2>Acceso de administrador</h2>
+        <div class="pago">
 
-    <input
-        type="text"
-        id="usuario"
-        placeholder="Usuario"
-    >
+            <h3>MERCADO PAGO</h3>
 
-    <input
-        type="password"
-        id="contrasena"
-        placeholder="Contraseña"
-    >
+            <p><strong>Nombre:</strong></p>
 
-    <br>
+            <p>JOSE ALBERTO HERNANDEZ SANTIAGO</p>
 
-    <button id="loginBtn">
-        Iniciar sesión
-    </button>
+            <p><strong>Tarjeta:</strong></p>
 
-    <button id="logoutBtn">
-        Cerrar sesión
-    </button>
+            <p>722969010066514952</p>
 
-    <p id="adminStatus"></p>
-
-    <div id="adminInstructions">
-        <b>Modo administrador activo</b>
-        <br><br>
-        Haz clic en cualquier boleto para cambiarlo:
-        <br><br>
-        🟩 Verde → ⬜ Gris
-        <br>
-        ⬜ Gris → 🟩 Verde
-    </div>
-
-</div>
+        </div>
 
 
-<!-- ============================= -->
-<!-- INFORMACIÓN DE PAGO -->
-<!-- ============================= -->
+        <div class="pago">
 
-<div class="card" style="margin-top: 35px;">
+            <h3>BBVA</h3>
 
-    <h2 style="background:black; color:white; padding:12px; border-radius:8px;">
-        INFORMACIÓN DE PAGO
-    </h2>
+            <p><strong>Nombre:</strong></p>
 
-    <p style="font-size:17px;">
-        Realiza el pago en cualquiera de las siguientes cuentas:
-    </p>
+            <p>JUAN</p>
 
-    <div style="text-align:left; margin-top:20px; font-size:17px;">
+            <p><strong>Tarjeta:</strong></p>
 
-        <b>BANCO:</b> MERCADO PAGO W<br>
-        <b>NOMBRE:</b> JOSE ALBERTO HERNANDEZ SANTIAGO<br>
-        <b>TARJETA:</b> 722969010066514952
+            <p>4152 3141 0727 1820</p>
 
-        <hr>
+        </div>
 
-        <b>BANCO:</b> BBVA<br>
-        <b>NOMBRE:</b> JUAN<br>
-        <b>TARJETA:</b> 4152 3141 0727 1820
-
-    </div>
-
-    <p style="font-size:18px; margin-top:20px;">
-        <b>WhatsApp para dudas:</b>
-    </p>
-
-    <p style="font-size:22px; color:#25D366; font-weight:bold;">
-        (899) 106 2860
-    </p>
-
-</div>
+    </section>
 
 
-<!-- ============================= -->
-<!-- BOLETOS -->
-<!-- ============================= -->
+    <!-- =========================
+         LEYENDA
+    ========================== -->
 
-<h2 style="margin-top:40px;">
-    Selecciona tus boletos
-</h2>
+    <section class="leyenda">
 
-<div class="grid" id="grid"></div>
+        <div class="leyenda-item">
+
+            <div class="color verde"></div>
+
+            <span>Disponible</span>
+
+        </div>
 
 
-<!-- ============================= -->
-<!-- WHATSAPP -->
-<!-- ============================= -->
+        <div class="leyenda-item">
 
-<button id="whatsappBtn">
-    Enviar por WhatsApp
-</button>
+            <div class="color gris"></div>
+
+            <span>Ocupado</span>
+
+        </div>
+
+
+        <div class="leyenda-item">
+
+            <div class="color rojo"></div>
+
+            <span>Seleccionado</span>
+
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         BOLETOS
+    ========================== -->
+
+    <section class="contenedor-boletos">
+
+        <div class="titulo-boletos">
+
+            <h2>Boletos</h2>
+
+            <div id="cargando">
+                Cargando boletos...
+            </div>
+
+        </div>
+
+
+        <div
+            id="gridBoletos"
+            class="grid-boletos"
+        ></div>
+
+    </section>
+
+
+    <!-- =========================
+         ACCIONES
+    ========================== -->
+
+    <section class="acciones">
+
+        <button
+            id="btnWhatsapp"
+            onclick="enviarWhatsApp()"
+        >
+            📱 Enviar selección por WhatsApp
+        </button>
+
+        <div id="contador">
+            Boletos seleccionados: 0
+        </div>
+
+    </section>
+
+
+    <!-- =========================
+         ADMINISTRADOR
+    ========================== -->
+
+    <section class="admin-panel">
+
+        <h2>🔐 Administrador</h2>
+
+        <div id="loginFormulario">
+
+            <input
+                type="imagination.3d.4@gmail.com"
+                id="emailAdmin"
+                placeholder="Correo de administrador"
+            >
+
+            <input
+                type="password"
+                id="passwordAdmin"
+                placeholder="Contraseña"
+            >
+
+            <button
+                id="btnLogin"
+                onclick="iniciarSesion()"
+            >
+                Iniciar sesión
+            </button>
+
+        </div>
+
+
+        <div id="adminSesion" style="display:none;">
+
+            <p class="admin-activo">
+                🟢 Modo administrador activo
+            </p>
+
+            <p>
+                Ahora puedes hacer clic en los boletos para cambiar
+                su estado.
+            </p>
+
+            <button
+                id="btnLogout"
+                onclick="cerrarSesion()"
+            >
+                Cerrar sesión
+            </button>
+
+        </div>
+
+
+        <div
+            id="adminEstado"
+            class="admin-inactivo"
+        >
+            Modo visitante
+        </div>
+
+    </section>
 
 
 <script>
 
-    /* ========================================
+    /* =====================================================
+       CONFIGURACIÓN SUPABASE
+    ===================================================== */
+
+    const SUPABASE_URL =
+        "https://erybkpsxbjfldzusvagd.supabase.co";
+
+    const SUPABASE_KEY =
+        "sb_publishable_00rH5fNNjcIOmJfH48PwZw_87dgNB7V";
+
+
+    const supabaseClient =
+        window.supabase.createClient(
+            SUPABASE_URL,
+            SUPABASE_KEY
+        );
+
+
+    /* =====================================================
        VARIABLES
-    ======================================== */
+    ===================================================== */
 
-    const grid = document.getElementById("grid");
+    let modoAdmin = false;
 
-    let modoAdministrador = false;
+    let boletos = [];
 
-
-    /* ========================================
-       CREAR LOS 1500 BOLETOS
-    ======================================== */
-
-    function crearBoletos() {
-
-        for (let i = 1; i <= 1500; i++) {
-
-            const btn = document.createElement("div");
-
-            btn.classList.add("boleto");
-
-            btn.innerHTML = `
-                <span class="no-select">${i}</span>
-            `;
+    let seleccionados = new Set();
 
 
-            /* ========================================
-               CLICK DEL BOLETO
-            ======================================== */
+    /* =====================================================
+       CARGAR BOLETOS
+    ===================================================== */
 
-            btn.addEventListener("click", () => {
+    async function cargarBoletos() {
 
-                /*
-                Si estamos en modo administrador,
-                cambiamos Verde <-> Gris.
-                */
+        document.getElementById("cargando").style.display = "block";
 
-                if (modoAdministrador) {
+        try {
 
-                    btn.classList.toggle("gris");
+            /*
+             * Supabase puede limitar las consultas a 1000 registros.
+             * Por eso hacemos dos consultas:
+             *
+             * 1 - 1000
+             * 1001 - 1500
+             */
 
-                    return;
-                }
-
-
-                /*
-                Si NO somos administrador,
-                solamente permitimos seleccionar
-                boletos verdes.
-                */
-
-                if (!btn.classList.contains("gris")) {
-
-                    btn.classList.toggle("seleccionado");
-
-                }
-
-            });
+            const resultado1 =
+                await supabaseClient
+                    .from("boletos")
+                    .select("numero, estado")
+                    .order("numero", {
+                        ascending: true
+                    })
+                    .range(0, 999);
 
 
-            grid.appendChild(btn);
+            if (resultado1.error) {
+                throw resultado1.error;
+            }
+
+
+            const resultado2 =
+                await supabaseClient
+                    .from("boletos")
+                    .select("numero, estado")
+                    .order("numero", {
+                        ascending: true
+                    })
+                    .range(1000, 1499);
+
+
+            if (resultado2.error) {
+                throw resultado2.error;
+            }
+
+
+            boletos = [
+                ...resultado1.data,
+                ...resultado2.data
+            ];
+
+
+            console.log(
+                "Boletos cargados:",
+                boletos.length
+            );
+
+
+            mostrarBoletos();
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            document.getElementById("cargando").innerHTML =
+                "❌ Error al cargar los boletos.<br><br>" +
+                error.message;
 
         }
 
     }
 
 
-    /* ========================================
-       BOTÓN ADMINISTRADOR
-    ======================================== */
+    /* =====================================================
+       MOSTRAR BOLETOS
+    ===================================================== */
 
-    document.getElementById("adminBtn").addEventListener("click", () => {
+    function mostrarBoletos() {
 
-        const panel = document.getElementById("adminPanel");
-
-        if (panel.style.display === "none" || panel.style.display === "") {
-
-            panel.style.display = "block";
-
-        } else {
-
-            panel.style.display = "none";
-
-        }
-
-    });
+        const grid =
+            document.getElementById("gridBoletos");
 
 
-    /* ========================================
-       LOGIN
-    ======================================== */
-
-    document.getElementById("loginBtn").addEventListener("click", () => {
-
-        const usuario =
-            document.getElementById("usuario").value;
-
-        const contrasena =
-            document.getElementById("contrasena").value;
+        grid.innerHTML = "";
 
 
-        /* DATOS DE ACCESO */
-
-        if (
-            usuario === "Juan" &&
-            contrasena === "Juan321"
-        ) {
-
-            modoAdministrador = true;
-
-
-            document.getElementById("adminStatus").innerText =
-                "✅ Sesión iniciada correctamente";
-
-
-            document.getElementById("adminStatus").style.color =
-                "green";
-
-
-            document.getElementById("adminInstructions").style.display =
-                "block";
-
-
-            document.getElementById("loginBtn").style.display =
-                "none";
-
-
-            document.getElementById("logoutBtn").style.display =
-                "inline-block";
-
-
-            document.getElementById("usuario").style.display =
-                "none";
-
-
-            document.getElementById("contrasena").style.display =
-                "none";
-
-        } else {
-
-            modoAdministrador = false;
-
-
-            document.getElementById("adminStatus").innerText =
-                "❌ Usuario o contraseña incorrectos";
-
-
-            document.getElementById("adminStatus").style.color =
-                "red";
-
-        }
-
-    });
-
-
-    /* ========================================
-       CERRAR SESIÓN
-    ======================================== */
-
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-
-        modoAdministrador = false;
-
-
-        document.getElementById("adminStatus").innerText =
-            "Sesión cerrada";
-
-
-        document.getElementById("adminStatus").style.color =
-            "black";
-
-
-        document.getElementById("adminInstructions").style.display =
+        document.getElementById("cargando").style.display =
             "none";
 
 
-        document.getElementById("loginBtn").style.display =
-            "inline-block";
+        boletos.forEach(boleto => {
+
+            const boton =
+                document.createElement("button");
 
 
-        document.getElementById("logoutBtn").style.display =
-            "none";
+            boton.classList.add("boleto");
 
 
-        document.getElementById("usuario").style.display =
-            "inline-block";
+            boton.textContent =
+                boleto.numero;
 
 
-        document.getElementById("contrasena").style.display =
-            "inline-block";
+            /*
+             * Estado de Supabase:
+             *
+             * true  = disponible
+             * false = ocupado
+             */
 
+            if (boleto.estado === true) {
 
-        document.getElementById("usuario").value = "";
-        document.getElementById("contrasena").value = "";
-
-    });
-
-
-    /* ========================================
-       WHATSAPP
-    ======================================== */
-
-    document.getElementById("whatsappBtn").addEventListener("click", () => {
-
-        const seleccionados = [];
-
-
-        document.querySelectorAll(".boleto").forEach((b, index) => {
-
-            if (b.classList.contains("seleccionado")) {
-
-                seleccionados.push(index + 1);
+                boton.classList.add("disponible");
 
             }
+            else {
+
+                boton.classList.add("ocupado");
+
+            }
+
+
+            /*
+             * Si el cliente había seleccionado
+             * este boleto, mostrarlo rojo.
+             */
+
+            if (
+                !modoAdmin &&
+                seleccionados.has(boleto.numero) &&
+                boleto.estado === true
+            ) {
+
+                boton.classList.remove("disponible");
+
+                boton.classList.add("seleccionado");
+
+            }
+
+
+            boton.addEventListener(
+                "click",
+                () => manejarClickBoleto(boleto)
+            );
+
+
+            grid.appendChild(boton);
 
         });
 
 
-        if (seleccionados.length === 0) {
+        actualizarContador();
 
-            alert("No has seleccionado ningún boleto");
+    }
+
+
+    /* =====================================================
+       CLICK EN BOLETO
+    ===================================================== */
+
+    async function manejarClickBoleto(boleto) {
+
+
+        /* ==============================================
+           MODO ADMIN
+        ============================================== */
+
+        if (modoAdmin) {
+
+            await cambiarEstadoBoleto(boleto);
 
             return;
 
         }
 
 
-        const numero = "528991062860";
+        /* ==============================================
+           MODO VISITANTE
+        ============================================== */
+
+        if (boleto.estado !== true) {
+
+            return;
+
+        }
+
+
+        /*
+         * Si ya está seleccionado,
+         * quitar selección.
+         */
+
+        if (seleccionados.has(boleto.numero)) {
+
+            seleccionados.delete(boleto.numero);
+
+        }
+
+        else {
+
+            seleccionados.add(boleto.numero);
+
+        }
+
+
+        mostrarBoletos();
+
+    }
+
+
+    /* =====================================================
+       CAMBIAR ESTADO DESDE ADMIN
+    ===================================================== */
+
+    async function cambiarEstadoBoleto(boleto) {
+
+        /*
+         * Si actualmente es true:
+         *
+         * true → false
+         *
+         * Si actualmente es false:
+         *
+         * false → true
+         */
+
+        const nuevoEstado =
+            !boleto.estado;
+
+
+        try {
+
+            const { error } =
+                await supabaseClient
+                    .from("boletos")
+                    .update({
+                        estado: nuevoEstado
+                    })
+                    .eq(
+                        "numero",
+                        boleto.numero
+                    );
+
+
+            if (error) {
+
+                throw error;
+
+            }
+
+
+            console.log(
+                "Boleto actualizado:",
+                boleto.numero,
+                nuevoEstado
+            );
+
+
+            /*
+             * Actualizar el objeto local
+             */
+
+            boleto.estado =
+                nuevoEstado;
+
+
+            /*
+             * Si lo estamos haciendo disponible,
+             * quitarlo de selección.
+             */
+
+            seleccionados.delete(
+                boleto.numero
+            );
+
+
+            mostrarBoletos();
+
+        }
+        catch (error) {
+
+            console.error(error);
+
+            alert(
+                "❌ No se pudo cambiar el boleto.\n\n" +
+                error.message
+            );
+
+        }
+
+    }
+
+
+    /* =====================================================
+       CONTADOR
+    ===================================================== */
+
+    function actualizarContador() {
+
+        document.getElementById("contador").textContent =
+            "Boletos seleccionados: " +
+            seleccionados.size;
+
+    }
+
+
+    /* =====================================================
+       WHATSAPP
+    ===================================================== */
+
+    function enviarWhatsApp() {
+
+        if (seleccionados.size === 0) {
+
+            alert(
+                "Selecciona al menos un boleto."
+            );
+
+            return;
+
+        }
+
+
+        const lista =
+            Array.from(seleccionados)
+                .sort((a, b) => a - b);
+
 
         const mensaje =
-            `Elegí los boletos: ${seleccionados.join(", ")}`;
+            "Hola, elegí los siguientes boletos: " +
+            lista.join(", ");
+
+
+        const numeroWhatsApp =
+            "528991062860";
 
 
         const url =
-            `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+            "https://wa.me/" +
+            numeroWhatsApp +
+            "?text=" +
+            encodeURIComponent(mensaje);
 
 
-        window.open(url, "_blank");
+        window.open(
+            url,
+            "_blank"
+        );
 
-    });
+    }
 
 
-    /* ========================================
+    /* =====================================================
+       INICIAR SESIÓN
+    ===================================================== */
+
+    async function iniciarSesion() {
+
+        const email =
+            document.getElementById(
+                "emailAdmin"
+            ).value.trim();
+
+
+        const password =
+            document.getElementById(
+                "passwordAdmin"
+            ).value;
+
+
+        if (!email || !password) {
+
+            alert(
+                "Escribe el correo y la contraseña."
+            );
+
+            return;
+
+        }
+
+
+        const { data, error } =
+            await supabaseClient.auth
+                .signInWithPassword({
+
+                    email: email,
+
+                    password: password
+
+                });
+
+
+        if (error) {
+
+            console.error(error);
+
+            alert(
+                "❌ Error al iniciar sesión:\n\n" +
+                error.message
+            );
+
+            return;
+
+        }
+
+
+        console.log(
+            "Sesión iniciada:",
+            data.user
+        );
+
+
+        /*
+         * Verificar que realmente sea
+         * nuestro administrador.
+         */
+
+        if (
+            data.user.id !==
+            "c14d812d-07e1-488a-8daa-94a0f1cbf299"
+        ) {
+
+            await supabaseClient.auth.signOut();
+
+            alert(
+                "❌ Este usuario no tiene permisos de administrador."
+            );
+
+            return;
+
+        }
+
+
+        activarModoAdmin();
+
+    }
+
+
+    /* =====================================================
+       ACTIVAR MODO ADMIN
+    ===================================================== */
+
+    function activarModoAdmin() {
+
+        modoAdmin = true;
+
+
+        /*
+         * Limpiar selección de cliente
+         */
+
+        seleccionados.clear();
+
+
+        document.body.classList.add(
+            "admin-mode"
+        );
+
+
+        document.getElementById(
+            "loginFormulario"
+        ).style.display = "none";
+
+
+        document.getElementById(
+            "adminSesion"
+        ).style.display = "block";
+
+
+        document.getElementById(
+            "adminEstado"
+        ).textContent =
+            "🟢 Sesión de Juan activa";
+
+
+        document.getElementById(
+            "adminEstado"
+        ).className =
+            "admin-activo";
+
+
+        mostrarBoletos();
+
+    }
+
+
+    /* =====================================================
+       CERRAR SESIÓN
+    ===================================================== */
+
+    async function cerrarSesion() {
+
+        const { error } =
+            await supabaseClient.auth.signOut();
+
+
+        if (error) {
+
+            console.error(error);
+
+            alert(
+                "Error al cerrar sesión."
+            );
+
+            return;
+
+        }
+
+
+        modoAdmin = false;
+
+        seleccionados.clear();
+
+
+        document.body.classList.remove(
+            "admin-mode"
+        );
+
+
+        document.getElementById(
+            "loginFormulario"
+        ).style.display = "block";
+
+
+        document.getElementById(
+            "adminSesion"
+        ).style.display = "none";
+
+
+        document.getElementById(
+            "adminEstado"
+        ).textContent =
+            "Modo visitante";
+
+
+        document.getElementById(
+            "adminEstado"
+        ).className =
+            "admin-inactivo";
+
+
+        document.getElementById(
+            "passwordAdmin"
+        ).value = "";
+
+
+        mostrarBoletos();
+
+    }
+
+
+    /* =====================================================
+       COMPROBAR SESIÓN AL ABRIR LA PÁGINA
+    ===================================================== */
+
+    async function comprobarSesion() {
+
+        const { data } =
+            await supabaseClient.auth
+                .getSession();
+
+
+        const session =
+            data.session;
+
+
+        if (!session) {
+
+            return;
+
+        }
+
+
+        /*
+         * Verificar UID
+         */
+
+        if (
+            session.user.id ===
+            "c14d812d-07e1-488a-8daa-94a0f1cbf299"
+        ) {
+
+            activarModoAdmin();
+
+        }
+
+    }
+
+
+    /* =====================================================
+       CAMBIOS DE AUTENTICACIÓN
+    ===================================================== */
+
+    supabaseClient.auth.onAuthStateChange(
+        (event, session) => {
+
+            console.log(
+                "Auth:",
+                event
+            );
+
+        }
+    );
+
+
+    /* =====================================================
        INICIAR
-    ======================================== */
+    ===================================================== */
 
-    crearBoletos();
+    async function iniciarPagina() {
+
+        await comprobarSesion();
+
+        await cargarBoletos();
+
+    }
+
+
+    iniciarPagina();
 
 </script>
-```
 
 </body>
 </html>
