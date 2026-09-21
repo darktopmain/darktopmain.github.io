@@ -1,206 +1,566 @@
 <!DOCTYPE html>
+
 <html>
 <head>
     <meta charset="UTF-8">
     <title>Rifa & Asociados</title>
 
-    <style>
+```
+<style>
 
-        /* ======== FONDO ELEGANTE ======== */
-        body {
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #ececec, #f7f7f7);
-            padding: 20px;
-            text-align: center;
-            color: #333;
-        }
+    body {
+        font-family: Arial, sans-serif;
+        background: linear-gradient(135deg, #ececec, #f7f7f7);
+        padding: 20px;
+        text-align: center;
+        color: #333;
+    }
 
-        h1, h2, h3 {
-            font-weight: bold;
-        }
+    h1, h2, h3 {
+        font-weight: bold;
+    }
 
-        /* ======== LOGO ======== */
-        .logo-container {
-            width: 100%;
-            text-align: center;
-            margin-bottom: 25px;
-        }
+    /* ======== LOGO ======== */
 
-        .logo-container img {
-            width: 260px;
-            border-radius: 12px;
-            box-shadow: 0 0 12px rgba(0,0,0,0.2);
-        }
+    .logo-container {
+        width: 100%;
+        text-align: center;
+        margin-bottom: 25px;
+    }
 
-        /* ======== TARJETAS DE INFORMACIÓN ======== */
-        .card {
-            background: #ffffff;
-            padding: 25px;
-            border-radius: 12px;
-            max-width: 900px;
-            margin: auto;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-        }
+    .logo-container img {
+        width: 260px;
+        border-radius: 12px;
+        box-shadow: 0 0 12px rgba(0,0,0,0.2);
+    }
 
-        /* ======== GRID DE BOLETOS ======== */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(15, 1fr);
-            gap: 8px;
-            width: 100%;
-            max-width: 1050px;
-            max-height: 450px;
-            overflow-y: auto;
-            margin: 30px auto 20px auto;
-            padding-right: 10px;
-        }
+    /* ======== TARJETAS ======== */
 
-        .boleto {
-            padding: 9px;
-            background: #1f8f1f;
-            color: white;
-            font-size: 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: 0.15s;
-            user-select: none;
-            font-weight: bold;
-        }
+    .card {
+        background: #ffffff;
+        padding: 25px;
+        border-radius: 12px;
+        max-width: 900px;
+        margin: auto;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
 
-        .boleto:hover {
-            background: #26aa26;
-        }
+    /* ======== GRID ======== */
 
-        .boleto.seleccionado {
-            background: #d62b2b !important;
-        }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(15, 1fr);
+        gap: 8px;
+        width: 100%;
+        max-width: 1050px;
+        max-height: 450px;
+        overflow-y: auto;
+        margin: 30px auto 20px auto;
+        padding-right: 10px;
+    }
 
-        /* Ocupado = negro + deshabilitado */
-        .boleto.ocupado {
-            background: #cfcfcf !important;
-            color: #333 !important;
-            cursor: not-allowed !important;
-            box-shadow: none;
-        }
+    /* ======== BOLETOS ======== */
 
-        /* ======== BOTÓN WHATSAPP ======== */
-        #whatsappBtn {
-            background: #25D366;
-            color: white;
-            padding: 12px 25px;
-            font-size: 20px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            font-weight: bold;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.2);
-        }
+    .boleto {
+        padding: 9px;
+        background: #1f8f1f;
+        color: white;
+        font-size: 14px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: 0.15s;
+        user-select: none;
+        font-weight: bold;
+    }
 
-        #whatsappBtn:hover {
-            background: #1ebe5c;
-        }
+    .boleto:hover {
+        background: #26aa26;
+    }
 
-    </style>
+    /* ======== BOLETO GRIS ======== */
+
+    .boleto.gris {
+        background: #cfcfcf !important;
+        color: #333 !important;
+    }
+
+    /* ======== BOLETO SELECCIONADO PARA WHATSAPP ======== */
+
+    .boleto.seleccionado {
+        background: #d62b2b !important;
+        color: white !important;
+    }
+
+    /* ======== BOTONES ======== */
+
+    button {
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: bold;
+    }
+
+    #whatsappBtn {
+        background: #25D366;
+        color: white;
+        padding: 12px 25px;
+        font-size: 20px;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+    }
+
+    #whatsappBtn:hover {
+        background: #1ebe5c;
+    }
+
+    #adminBtn {
+        background: #222;
+        color: white;
+        padding: 12px 25px;
+        font-size: 18px;
+        margin-bottom: 20px;
+    }
+
+    #adminBtn:hover {
+        background: #444;
+    }
+
+    /* ======== PANEL ADMIN ======== */
+
+    #adminPanel {
+        display: none;
+        background: white;
+        max-width: 500px;
+        margin: 20px auto;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    #adminPanel input {
+        width: 90%;
+        padding: 12px;
+        margin: 8px;
+        border: 1px solid #ccc;
+        border-radius: 6px;
+        font-size: 16px;
+    }
+
+    #loginBtn {
+        background: #1f8f1f;
+        color: white;
+        padding: 12px 25px;
+        font-size: 17px;
+    }
+
+    #logoutBtn {
+        background: #c62828;
+        color: white;
+        padding: 10px 20px;
+        font-size: 16px;
+        display: none;
+    }
+
+    #adminStatus {
+        font-weight: bold;
+        margin-top: 10px;
+    }
+
+    /* ======== INFORMACIÓN ADMIN ======== */
+
+    #adminInstructions {
+        display: none;
+        margin-top: 15px;
+        padding: 12px;
+        background: #eee;
+        border-radius: 8px;
+    }
+
+</style>
+```
+
 </head>
 
 <body>
 
-    <!-- LOGO -->
-    <div class="logo-container">
-        <img src="NOMBRE-DE-TU-IMAGEN.png" alt="Logo">
+```
+<!-- LOGO -->
+
+<div class="logo-container">
+    <img src="NOMBRE-DE-TU-IMAGEN.png" alt="Logo">
+</div>
+
+<h1 style="margin-bottom:5px;">Rifas & Asociados</h1>
+
+<p style="font-size:18px; margin-top:0;">
+    Selecciona tus boletos disponibles
+</p>
+
+
+<!-- ============================= -->
+<!-- BOTÓN ADMINISTRADOR -->
+<!-- ============================= -->
+
+<button id="adminBtn">
+    🔐 Administrador
+</button>
+
+
+<!-- ============================= -->
+<!-- PANEL DE LOGIN -->
+<!-- ============================= -->
+
+<div id="adminPanel">
+
+    <h2>Acceso de administrador</h2>
+
+    <input
+        type="text"
+        id="usuario"
+        placeholder="Usuario"
+    >
+
+    <input
+        type="password"
+        id="contrasena"
+        placeholder="Contraseña"
+    >
+
+    <br>
+
+    <button id="loginBtn">
+        Iniciar sesión
+    </button>
+
+    <button id="logoutBtn">
+        Cerrar sesión
+    </button>
+
+    <p id="adminStatus"></p>
+
+    <div id="adminInstructions">
+        <b>Modo administrador activo</b>
+        <br><br>
+        Haz clic en cualquier boleto para cambiarlo:
+        <br><br>
+        🟩 Verde → ⬜ Gris
+        <br>
+        ⬜ Gris → 🟩 Verde
     </div>
 
-    <h1 style="margin-bottom:5px;">Rifas & Asociados</h1>
-    <p style="font-size:18px; margin-top:0;">Selecciona tus boletos disponibles</p>
+</div>
 
-    <!-- SECCIÓN DE INFORMACIÓN DE PAGO -->
-    <div class="card" style="margin-top: 35px;">
-        <h2 style="background:black; color:white; padding:12px; border-radius:8px;">INFORMACIÓN DE PAGO</h2>
 
-        <p style="font-size:17px;">Realiza el pago en cualquiera de las siguientes cuentas:</p>
+<!-- ============================= -->
+<!-- INFORMACIÓN DE PAGO -->
+<!-- ============================= -->
 
-        <div style="text-align:left; margin-top:20px; font-size:17px;">
-            <b>BANCO:</b> MERCADO PAGO W<br>
-            <b>NOMBRE:</b> JOSE ALBERTO HERNANDEZ SANTIAGO<br>
-            <b>TARJETA:</b> 722969010066514952
-            <hr>
+<div class="card" style="margin-top: 35px;">
 
-            <b>BANCO:</b> BBVA<br>
-            <b>NOMBRE:</b> JUAN <br>
-            <b>TARJETA:</b> 4152 3141 0727 1820
-            <hr>
+    <h2 style="background:black; color:white; padding:12px; border-radius:8px;">
+        INFORMACIÓN DE PAGO
+    </h2>
 
-         
-        </div>
+    <p style="font-size:17px;">
+        Realiza el pago en cualquiera de las siguientes cuentas:
+    </p>
 
-        <p style="font-size:18px; margin-top:20px;"><b>WhatsApp para dudas:</b></p>
-        <p style="font-size:22px; color:#25D366; font-weight:bold;">(899) 106 2860</p>
+    <div style="text-align:left; margin-top:20px; font-size:17px;">
+
+        <b>BANCO:</b> MERCADO PAGO W<br>
+        <b>NOMBRE:</b> JOSE ALBERTO HERNANDEZ SANTIAGO<br>
+        <b>TARJETA:</b> 722969010066514952
+
+        <hr>
+
+        <b>BANCO:</b> BBVA<br>
+        <b>NOMBRE:</b> JUAN<br>
+        <b>TARJETA:</b> 4152 3141 0727 1820
+
     </div>
 
-    <!-- GRID DE BOLETOS -->
-    <h2 style="margin-top:40px;">Selecciona tus boletos</h2>
+    <p style="font-size:18px; margin-top:20px;">
+        <b>WhatsApp para dudas:</b>
+    </p>
 
-    <div class="grid" id="grid"></div>
+    <p style="font-size:22px; color:#25D366; font-weight:bold;">
+        (899) 106 2860
+    </p>
 
-    <!-- BOTÓN WHATSAPP -->
-    <button id="whatsappBtn">Enviar por WhatsApp</button>
+</div>
 
-    <script>
-        const grid = document.getElementById("grid");
 
-        async function cargarBoletos() {
-            try {
-               const respuesta = await fetch("boletos.json?v=" + new Date().getTime());
-                const datos = await respuesta.json();
+<!-- ============================= -->
+<!-- BOLETOS -->
+<!-- ============================= -->
 
-                const ocupados = datos.ocupados || [];
+<h2 style="margin-top:40px;">
+    Selecciona tus boletos
+</h2>
 
-                for (let i = 1; i <= 1500; i++) {
-                    const btn = document.createElement("div");
-                    btn.classList.add("boleto");
+<div class="grid" id="grid"></div>
 
-                    btn.innerHTML = `<span class="no-select">${i}</span>`;
 
-                    if (ocupados.includes(i)) {
-                        btn.classList.add("ocupado");
-                    } else {
-                        btn.addEventListener("click", () => {
-                            btn.classList.toggle("seleccionado");
-                        });
-                    }
+<!-- ============================= -->
+<!-- WHATSAPP -->
+<!-- ============================= -->
 
-                    grid.appendChild(btn);
+<button id="whatsappBtn">
+    Enviar por WhatsApp
+</button>
+
+
+<script>
+
+    /* ========================================
+       VARIABLES
+    ======================================== */
+
+    const grid = document.getElementById("grid");
+
+    let modoAdministrador = false;
+
+
+    /* ========================================
+       CREAR LOS 1500 BOLETOS
+    ======================================== */
+
+    function crearBoletos() {
+
+        for (let i = 1; i <= 1500; i++) {
+
+            const btn = document.createElement("div");
+
+            btn.classList.add("boleto");
+
+            btn.innerHTML = `
+                <span class="no-select">${i}</span>
+            `;
+
+
+            /* ========================================
+               CLICK DEL BOLETO
+            ======================================== */
+
+            btn.addEventListener("click", () => {
+
+                /*
+                Si estamos en modo administrador,
+                cambiamos Verde <-> Gris.
+                */
+
+                if (modoAdministrador) {
+
+                    btn.classList.toggle("gris");
+
+                    return;
                 }
 
-            } catch (error) {
-                console.error("Error al cargar boletos.json:", error);
-            }
-        }
 
-        cargarBoletos();
+                /*
+                Si NO somos administrador,
+                solamente permitimos seleccionar
+                boletos verdes.
+                */
 
-        // BOTÓN WHATSAPP
-        document.getElementById("whatsappBtn").addEventListener("click", () => {
-            const seleccionados = [];
+                if (!btn.classList.contains("gris")) {
 
-            document.querySelectorAll(".boleto").forEach((b, index) => {
-                if (b.classList.contains("seleccionado")) {
-                    seleccionados.push(index + 1);
+                    btn.classList.toggle("seleccionado");
+
                 }
+
             });
 
-            if (seleccionados.length === 0) {
-                alert("No has seleccionado ningún boleto");
-                return;
+
+            grid.appendChild(btn);
+
+        }
+
+    }
+
+
+    /* ========================================
+       BOTÓN ADMINISTRADOR
+    ======================================== */
+
+    document.getElementById("adminBtn").addEventListener("click", () => {
+
+        const panel = document.getElementById("adminPanel");
+
+        if (panel.style.display === "none" || panel.style.display === "") {
+
+            panel.style.display = "block";
+
+        } else {
+
+            panel.style.display = "none";
+
+        }
+
+    });
+
+
+    /* ========================================
+       LOGIN
+    ======================================== */
+
+    document.getElementById("loginBtn").addEventListener("click", () => {
+
+        const usuario =
+            document.getElementById("usuario").value;
+
+        const contrasena =
+            document.getElementById("contrasena").value;
+
+
+        /* DATOS DE ACCESO */
+
+        if (
+            usuario === "Juan" &&
+            contrasena === "Juan321"
+        ) {
+
+            modoAdministrador = true;
+
+
+            document.getElementById("adminStatus").innerText =
+                "✅ Sesión iniciada correctamente";
+
+
+            document.getElementById("adminStatus").style.color =
+                "green";
+
+
+            document.getElementById("adminInstructions").style.display =
+                "block";
+
+
+            document.getElementById("loginBtn").style.display =
+                "none";
+
+
+            document.getElementById("logoutBtn").style.display =
+                "inline-block";
+
+
+            document.getElementById("usuario").style.display =
+                "none";
+
+
+            document.getElementById("contrasena").style.display =
+                "none";
+
+        } else {
+
+            modoAdministrador = false;
+
+
+            document.getElementById("adminStatus").innerText =
+                "❌ Usuario o contraseña incorrectos";
+
+
+            document.getElementById("adminStatus").style.color =
+                "red";
+
+        }
+
+    });
+
+
+    /* ========================================
+       CERRAR SESIÓN
+    ======================================== */
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+
+        modoAdministrador = false;
+
+
+        document.getElementById("adminStatus").innerText =
+            "Sesión cerrada";
+
+
+        document.getElementById("adminStatus").style.color =
+            "black";
+
+
+        document.getElementById("adminInstructions").style.display =
+            "none";
+
+
+        document.getElementById("loginBtn").style.display =
+            "inline-block";
+
+
+        document.getElementById("logoutBtn").style.display =
+            "none";
+
+
+        document.getElementById("usuario").style.display =
+            "inline-block";
+
+
+        document.getElementById("contrasena").style.display =
+            "inline-block";
+
+
+        document.getElementById("usuario").value = "";
+        document.getElementById("contrasena").value = "";
+
+    });
+
+
+    /* ========================================
+       WHATSAPP
+    ======================================== */
+
+    document.getElementById("whatsappBtn").addEventListener("click", () => {
+
+        const seleccionados = [];
+
+
+        document.querySelectorAll(".boleto").forEach((b, index) => {
+
+            if (b.classList.contains("seleccionado")) {
+
+                seleccionados.push(index + 1);
+
             }
 
-            const numero = "528991062860";
-            const mensaje = `Elegí los boletos: ${seleccionados.join(", ")}`;
-            const url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
-
-            window.open(url, "_blank");
         });
-    </script>
+
+
+        if (seleccionados.length === 0) {
+
+            alert("No has seleccionado ningún boleto");
+
+            return;
+
+        }
+
+
+        const numero = "528991062860";
+
+        const mensaje =
+            `Elegí los boletos: ${seleccionados.join(", ")}`;
+
+
+        const url =
+            `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+
+        window.open(url, "_blank");
+
+    });
+
+
+    /* ========================================
+       INICIAR
+    ======================================== */
+
+    crearBoletos();
+
+</script>
+```
 
 </body>
 </html>
