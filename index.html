@@ -27,6 +27,16 @@
            ENCABEZADO
         ========================= */
 
+        .encabezado-superior {
+            width: 95%;
+            max-width: 1200px;
+            margin: 20px auto;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
+            align-items: start;
+            gap: 20px;
+        }
+
         header {
             text-align: center;
             padding: 25px 15px;
@@ -231,9 +241,10 @@
         ========================= */
 
         .admin-panel {
-            width: 95%;
-            max-width: 500px;
-            margin: 30px auto;
+            width: 100%;
+            max-width: 320px;
+            margin: 0;
+            justify-self: end;
             background: rgba(255,255,255,0.08);
             padding: 20px;
             border-radius: 15px;
@@ -316,6 +327,19 @@
 
         }
 
+        @media (max-width: 600px) {
+
+            .encabezado-superior {
+                grid-template-columns: minmax(0, 1fr);
+                gap: 15px;
+            }
+
+            .encabezado-superior .admin-panel {
+                grid-row: 1;
+            }
+
+        }
+
         @media (max-width: 500px) {
 
             header h1 {
@@ -341,6 +365,8 @@
          ENCABEZADO
     ========================== -->
 
+    <div class="encabezado-superior">
+
     <header>
 
         <img src="NOMBRE-DE-TU-IMAGEN.png" alt="Rifa & Asociados">
@@ -350,6 +376,70 @@
         <p>Selecciona tus boletos disponibles</p>
 
     </header>
+
+    <!-- =========================
+         ADMINISTRADOR
+    ========================== -->
+
+    <section class="admin-panel">
+
+        <h2>🔐 Administrador</h2>
+
+        <div id="loginFormulario">
+
+            <input
+                type="imagination.3d.4@gmail.com"
+                id="emailAdmin"
+                placeholder="Correo de administrador"
+            >
+
+            <input
+                type="password"
+                id="passwordAdmin"
+                placeholder="Contraseña"
+            >
+
+            <button
+                id="btnLogin"
+                onclick="iniciarSesion()"
+            >
+                Iniciar sesión
+            </button>
+
+        </div>
+
+
+        <div id="adminSesion" style="display:none;">
+
+            <p class="admin-activo">
+                🟢 Modo administrador activo
+            </p>
+
+            <p>
+                Ahora puedes hacer clic en los boletos para cambiar
+                su estado.
+            </p>
+
+            <button
+                id="btnLogout"
+                onclick="cerrarSesion()"
+            >
+                Cerrar sesión
+            </button>
+
+        </div>
+
+
+        <div
+            id="adminEstado"
+            class="admin-inactivo"
+        >
+            Modo visitante
+        </div>
+
+    </section>
+
+    </div>
 
 
     <!-- =========================
@@ -470,67 +560,6 @@
     </section>
 
 
-    <!-- =========================
-         ADMINISTRADOR
-    ========================== -->
-
-    <section class="admin-panel">
-
-        <h2>🔐 Administrador</h2>
-
-        <div id="loginFormulario">
-
-            <input
-                type="imagination.3d.4@gmail.com"
-                id="emailAdmin"
-                placeholder="Correo de administrador"
-            >
-
-            <input
-                type="password"
-                id="passwordAdmin"
-                placeholder="Contraseña"
-            >
-
-            <button
-                id="btnLogin"
-                onclick="iniciarSesion()"
-            >
-                Iniciar sesión
-            </button>
-
-        </div>
-
-
-        <div id="adminSesion" style="display:none;">
-
-            <p class="admin-activo">
-                🟢 Modo administrador activo
-            </p>
-
-            <p>
-                Ahora puedes hacer clic en los boletos para cambiar
-                su estado.
-            </p>
-
-            <button
-                id="btnLogout"
-                onclick="cerrarSesion()"
-            >
-                Cerrar sesión
-            </button>
-
-        </div>
-
-
-        <div
-            id="adminEstado"
-            class="admin-inactivo"
-        >
-            Modo visitante
-        </div>
-
-    </section>
 
 
 <script>
