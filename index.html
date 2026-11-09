@@ -356,6 +356,17 @@
 
         }
 
+
+        .admin-panel select { width: 100%; padding: 10px; margin: 7px 0; border-radius: 8px; font-size: 16px; }
+        .admin-panel input { min-width: 0; }
+        .admin-panel input[type="checkbox"] { width: auto; }
+        #configRifa { text-align: left; margin-top: 20px; }
+        #configRifa label { display: block; margin-top: 12px; }
+        #configRifa small { display: block; color: #d1d5db; }
+        #configEstado { overflow-wrap: anywhere; }
+        #guardarRifa { width: 100%; background: #2563eb; color: white; }
+        #guardarRifa:disabled { opacity: .6; cursor: wait; }
+        #datosRifa { margin-top: 24px; line-height: 1.5; overflow-wrap: anywhere; }
     </style>
 </head>
 
@@ -374,6 +385,7 @@
         <h1>Rifa & Asociados</h1>
 
         <p>Selecciona tus boletos disponibles</p>
+        <div id="datosRifa" aria-live="polite">Cargando datos del sorteo…</div>
 
     </header>
 
@@ -388,7 +400,7 @@
         <div id="loginFormulario">
 
             <input
-                type="imagination.3d.4@gmail.com"
+                type="email"
                 id="emailAdmin"
                 placeholder="Correo de administrador"
             >
@@ -410,6 +422,38 @@
 
 
         <div id="adminSesion" style="display:none;">
+            <form id="configRifa">
+                <h3>Configuración de la rifa</h3>
+                <label for="rifaNombre">Nombre de la rifa</label>
+                <input id="rifaNombre" required maxlength="150">
+                <label for="rifaPrecio">Precio por boleto (MXN)</label>
+                <input id="rifaPrecio" type="number" min="0" max="9999999999.99" step="0.01" required>
+                <label for="rifaCiudad">Ciudad del sorteo</label>
+                <input id="rifaCiudad" maxlength="150" placeholder="Por definir">
+                <label for="rifaZona">Zona horaria del sorteo</label>
+                <select id="rifaZona" required>
+                    <option value="America/Matamoros">Reynosa / Matamoros</option>
+                    <option value="America/Mexico_City">Ciudad de México / Tampico</option>
+                    <option value="America/Monterrey">Monterrey</option>
+                    <option value="America/Cancun">Cancún</option>
+                    <option value="America/Tijuana">Tijuana</option>
+                    <option value="America/Hermosillo">Hermosillo</option>
+                    <option value="America/Mazatlan">Mazatlán</option>
+                    <option value="America/Chihuahua">Chihuahua</option>
+                    <option value="America/Ciudad_Juarez">Ciudad Juárez</option>
+                </select>
+                <label for="rifaFecha">Fecha y hora del sorteo</label>
+                <input id="rifaFecha" type="datetime-local">
+                <small>Hora de la zona seleccionada. Déjala vacía si está por definir.</small>
+                <label for="rifaPlazo">Plazo para pagar (horas)</label>
+                <input id="rifaPlazo" type="number" min="1" max="720" step="1" value="24" required>
+                <label><input id="rifaActiva" type="checkbox" checked> Publicar datos de la rifa</label>
+                <small>Este formulario configura la rifa actual; no reinicia los boletos.</small>
+                <button id="guardarRifa" type="submit" disabled>Guardar configuración</button>
+                <p id="configEstado" role="status"></p>
+                <button type="button" onclick="cargarConfiguracionRifa()">Volver a cargar</button>
+            </form>
+
 
             <p class="admin-activo">
                 🟢 Modo administrador activo
@@ -1041,6 +1085,7 @@
     function activarModoAdmin() {
 
         modoAdmin = true;
+        cargarConfiguracionRifa();
 
 
         /*
@@ -1106,6 +1151,9 @@
 
 
         modoAdmin = false;
+        configuracionLista = false;
+        document.getElementById("configRifa").reset();
+        cargarConfiguracionRifa();
 
         seleccionados.clear();
 
@@ -1209,10 +1257,134 @@
 
         await comprobarSesion();
 
+        await cargarConfiguracionRifa();
         await cargarBoletos();
 
     }
 
+
+    let rifaActual = null;
+    let configuracionLista = false;
+    let guardandoRifa = false;
+    const camposRifa = 'id,nombre,precio_boleto,moneda,fecha_sorteo,activa,ciudad,zona_horaria,plazo_pago_horas';
+
+    function fechaLocal(fecha, zona) {
+        const partes = new Intl.DateTimeFormat('sv-SE', {
+            timeZone: zona, year: 'numeric', month: '2-digit', day: '2-digit',
+            hour: '2-digit', minute: '2-digit', hourCycle: 'h23'
+        }).formatToParts(new Date(fecha));
+        const p = Object.fromEntries(partes.map(x => [x.type, x.value]));
+        return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+    }
+
+    function fechaUTC(valor, zona) {
+        const objetivo = Date.parse(valor + ':00Z');
+        let instante = objetivo;
+        for (let i = 0; i < 4; i++) {
+            const local = Date.parse(fechaLocal(instante, zona) + ':00Z');
+            instante += objetivo - local;
+        }
+        if (fechaLocal(instante, zona) !== valor) {
+            throw new Error('La hora elegida no existe en esa zona horaria. Elige otra hora.');
+        }
+        return new Date(instante).toISOString();
+    }
+
+    function mostrarDatosRifa() {
+        const resumen = document.getElementById('datosRifa');
+        resumen.replaceChildren();
+        if (!rifaActual || !rifaActual.activa) {
+            resumen.textContent = 'Los datos del próximo sorteo están por confirmar.';
+            return;
+        }
+        const r = rifaActual;
+        const fecha = r.fecha_sorteo
+            ? new Intl.DateTimeFormat('es-MX', {timeZone: r.zona_horaria, dateStyle: 'long', timeStyle: 'short'}).format(new Date(r.fecha_sorteo)) + ' (' + r.zona_horaria + ')'
+            : 'Por definir';
+        const lineas = [r.nombre,
+            'Precio por boleto: ' + new Intl.NumberFormat('es-MX', {style: 'currency', currency: r.moneda}).format(r.precio_boleto) + ' ' + r.moneda,
+            'Sorteo: ' + fecha, 'Ciudad: ' + (r.ciudad || 'Por definir'),
+            'Plazo para pagar: ' + r.plazo_pago_horas + ' horas después de apartar'];
+        for (const texto of lineas) {
+            const p = document.createElement('p');
+            p.textContent = texto;
+            resumen.appendChild(p);
+        }
+    }
+
+    async function cargarConfiguracionRifa() {
+        const estado = document.getElementById('configEstado');
+        const boton = document.getElementById('guardarRifa');
+        configuracionLista = false;
+        boton.disabled = true;
+        estado.textContent = 'Cargando configuración…';
+        try {
+            let consulta = supabaseClient.from('rifas').select(camposRifa);
+            if (!modoAdmin) consulta = consulta.eq('activa', true);
+            const {data, error} = await consulta.order('creado_en', {ascending: false}).limit(1);
+            if (error) throw error;
+            rifaActual = data[0] || null;
+            if (modoAdmin) {
+                const r = rifaActual;
+                document.getElementById('rifaNombre').value = r?.nombre || '';
+                document.getElementById('rifaPrecio').value = r?.precio_boleto ?? '';
+                document.getElementById('rifaCiudad').value = r?.ciudad || '';
+                document.getElementById('rifaZona').value = r?.zona_horaria || 'America/Matamoros';
+                document.getElementById('rifaPlazo').value = r?.plazo_pago_horas ?? 24;
+                document.getElementById('rifaFecha').value = r?.fecha_sorteo ? fechaLocal(r.fecha_sorteo, r.zona_horaria) : '';
+                document.getElementById('rifaActiva').checked = r?.activa ?? true;
+                configuracionLista = true;
+            }
+            mostrarDatosRifa();
+            estado.textContent = '';
+        } catch (error) {
+            rifaActual = null;
+            document.getElementById('datosRifa').textContent = 'Los datos del sorteo todavía no están disponibles.';
+            estado.textContent = 'No se pudo cargar la configuración. Verifica las columnas de rifas en Supabase y vuelve a intentar. ' + error.message;
+        } finally {
+            boton.disabled = !configuracionLista;
+        }
+    }
+
+    async function guardarConfiguracionRifa(event) {
+        event.preventDefault();
+        if (!modoAdmin || !configuracionLista || guardandoRifa) return;
+        const estado = document.getElementById('configEstado');
+        const boton = document.getElementById('guardarRifa');
+        try {
+            const nombre = document.getElementById('rifaNombre').value.trim();
+            const precio = Number(document.getElementById('rifaPrecio').value);
+            const plazo = Number(document.getElementById('rifaPlazo').value);
+            const zona = document.getElementById('rifaZona').value;
+            const fecha = document.getElementById('rifaFecha').value;
+            if (!nombre || !Number.isFinite(precio) || precio < 0 || !Number.isInteger(plazo) || plazo < 1 || plazo > 720) {
+                throw new Error('Revisa el nombre, el precio y el plazo de 1 a 720 horas.');
+            }
+            const valores = {nombre, precio_boleto: precio, moneda: 'MXN',
+                ciudad: document.getElementById('rifaCiudad').value.trim(),
+                zona_horaria: zona, plazo_pago_horas: plazo,
+                fecha_sorteo: fecha ? fechaUTC(fecha, zona) : null,
+                activa: document.getElementById('rifaActiva').checked};
+            guardandoRifa = true;
+            boton.disabled = true;
+            estado.textContent = 'Guardando…';
+            const consulta = rifaActual
+                ? supabaseClient.from('rifas').update(valores).eq('id', rifaActual.id)
+                : supabaseClient.from('rifas').insert(valores);
+            const {data, error} = await consulta.select(camposRifa).single();
+            if (error) throw error;
+            rifaActual = data;
+            mostrarDatosRifa();
+            estado.textContent = 'Configuración guardada correctamente.';
+        } catch (error) {
+            estado.textContent = 'No se pudo guardar: ' + error.message;
+        } finally {
+            guardandoRifa = false;
+            boton.disabled = !configuracionLista || !modoAdmin;
+        }
+    }
+
+    document.getElementById('configRifa').addEventListener('submit', guardarConfiguracionRifa);
 
     iniciarPagina();
 
@@ -1220,3 +1392,4 @@
 
 </body>
 </html>
+
