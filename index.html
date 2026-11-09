@@ -630,6 +630,11 @@
        VARIABLES
     ===================================================== */
 
+    const ADMIN_IDS = new Set([
+        "c14d812d-07e1-488a-8daa-94a0f1cbf299",
+        "9beb4c99-0906-493a-abe7-2da6151d2f93"
+    ]);
+
     let modoAdmin = false;
 
     let boletos = [];
@@ -1058,8 +1063,7 @@
          */
 
         if (
-            data.user.id !==
-            "c14d812d-07e1-488a-8daa-94a0f1cbf299"
+            !ADMIN_IDS.has(data.user.id)
         ) {
 
             await supabaseClient.auth.signOut();
@@ -1113,7 +1117,7 @@
         document.getElementById(
             "adminEstado"
         ).textContent =
-            "🟢 Sesión de Juan activa";
+            "🟢 Sesión de administrador activa";
 
 
         document.getElementById(
@@ -1222,8 +1226,7 @@
          */
 
         if (
-            session.user.id ===
-            "c14d812d-07e1-488a-8daa-94a0f1cbf299"
+            ADMIN_IDS.has(session.user.id)
         ) {
 
             activarModoAdmin();
