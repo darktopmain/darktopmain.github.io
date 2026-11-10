@@ -379,8 +379,17 @@
         #detalleComprobante { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; }
         #detalleComprobante dt { color: #d1d5db; }
         #detalleComprobante dd { margin: 0; overflow-wrap: anywhere; font-weight: bold; }
-        .admin-mode #apartadoCompra { display: none; }
+        .admin-mode #apartadoCompra, .admin-mode #nuevaCompra { display: none; }
         @media (max-width: 500px) { #detalleComprobante { grid-template-columns: minmax(0, 1fr); gap: 6px; } #detalleComprobante dd { margin-bottom: 10px; } }
+
+        #gestionVentas select { width: 100%; padding: 12px; border-radius: 8px; font-size: 16px; }
+        #gestionVentas input[type="checkbox"] { width: auto; }
+        #gestionVentas details { padding: 16px; border: 1px solid #64748b; border-radius: 10px; margin-bottom: 20px; }
+        #gestionVentas summary { cursor: pointer; font-weight: bold; }
+        .venta-card { padding: 18px 0; border-bottom: 1px solid #64748b; overflow-wrap: anywhere; }
+        .venta-card .peligro { background: #b91c1c; }
+        .ventas-paginacion { margin-top: 20px; }
+        #ventasEstado { overflow-wrap: anywhere; }
     </style>
 </head>
 
@@ -474,8 +483,8 @@
             </p>
 
             <p>
-                Ahora puedes hacer clic en los boletos para cambiar
-                su estado.
+                Selecciona números disponibles para registrar una venta.
+                Gestiona pagos y cancelaciones en Apartados y ventas.
             </p>
 
             <button
@@ -503,6 +512,43 @@
     <!-- =========================
          PAGOS
     ========================== -->
+
+
+    <section id="gestionVentas" class="reserva-panel" hidden aria-labelledby="tituloVentas">
+        <h2 id="tituloVentas">Apartados y ventas</h2>
+        <p>Solo administradores. Los apartados vencidos se liberan al actualizar. El cron de Supabase también los revisa cada minuto.</p>
+        <details>
+            <summary>Registrar venta por WhatsApp o en persona</summary>
+            <p>Selecciona los números disponibles en la cuadrícula y llena los datos.</p>
+            <p id="numerosVentaManual">Sin números seleccionados.</p>
+            <form id="formVentaManual">
+                <label for="ventaManualNombre">Nombre completo</label>
+                <input id="ventaManualNombre" required minlength="2" maxlength="150" autocomplete="off">
+                <label for="ventaManualTelefono">Teléfono / WhatsApp</label>
+                <input id="ventaManualTelefono" type="tel" required minlength="7" maxlength="30" autocomplete="off">
+                <label><input id="ventaManualPagada" type="checkbox"> Pago completo recibido y verificado</label>
+                <button type="submit" id="registrarVentaManual">Registrar venta o apartado</button>
+                <p id="ventaManualEstado" role="status"></p>
+            </form>
+        </details>
+        <form id="formBuscarVentas">
+            <label for="buscarVentas">Buscar por nombre, teléfono o folio</label>
+            <input id="buscarVentas" type="search" maxlength="150">
+            <label for="filtroVentas">Estado</label>
+            <select id="filtroVentas">
+                <option value="todos">Todos</option><option value="apartado">Pendientes de pago</option>
+                <option value="pagado">Pagados</option><option value="vencido">Vencidos</option><option value="cancelado">Cancelados</option>
+            </select>
+            <button type="submit">Buscar / actualizar y liberar vencidos</button>
+        </form>
+        <p id="ventasEstado" role="status"></p>
+        <div id="listaVentas"></div>
+        <div class="ventas-paginacion">
+            <button type="button" id="ventasAnterior" disabled>Anterior</button>
+            <span id="ventasPagina"></span>
+            <button type="button" id="ventasSiguiente" disabled>Siguiente</button>
+        </div>
+    </section>
 
     <section class="pagos">
 
@@ -624,6 +670,7 @@
         <a id="enlaceComprobante"></a>
         <div>
             <button type="button" onclick="copiarComprobante()">Copiar enlace</button>
+            <button type="button" id="nuevaCompra" onclick="iniciarOtroApartado()">Hacer otro apartado</button>
             <button type="button" onclick="cargarComprobante(tokenComprobante)">Actualizar comprobante</button>
         </div>
         <p id="copiarEstado" role="status"></p>
@@ -635,7 +682,7 @@
             id="btnWhatsapp"
             onclick="enviarWhatsApp()"
         >
-            📱 Enviar selección por WhatsApp
+            📱 Consultar mi apartado por WhatsApp
         </button>
 
         <div id="contador">
@@ -735,6 +782,9 @@
                 ...resultado1.data,
                 ...resultado2.data
             ];
+            seleccionados = new Set([...seleccionados].filter(numero =>
+                boletos.some(b => b.numero === numero && b.estado === true)
+            ));
 
 
             console.log(
@@ -814,7 +864,6 @@
              */
 
             if (
-                !modoAdmin &&
                 seleccionados.has(boleto.numero) &&
                 boleto.estado === true
             ) {
@@ -847,19 +896,17 @@
     ===================================================== */
 
     async function manejarClickBoleto(boleto) {
-        if (reservando || reservaTerminada) return;
+        if (reservando || ventasOcupado || (!modoAdmin && reservaTerminada)) return;
 
 
         /* ==============================================
            MODO ADMIN
         ============================================== */
 
-        if (modoAdmin) {
-
-            await cambiarEstadoBoleto(boleto);
-
+        if (modoAdmin && boleto.estado !== true) {
+            document.getElementById('gestionVentas').scrollIntoView({behavior:'smooth'});
+            mensajeVentas('Busca el apartado para confirmar el pago o cancelarlo. No se cambia el estado desde la cuadrícula.');
             return;
-
         }
 
 
@@ -901,94 +948,6 @@
        CAMBIAR ESTADO DESDE ADMIN
     ===================================================== */
 
-    async function cambiarEstadoBoleto(boleto) {
-        if (boleto.estado !== true) {
-            alert('Para proteger los apartados, los boletos ocupados se gestionarán desde el panel de ventas.');
-            return;
-        }
-
-
-        /*
-         * Si actualmente es true:
-         *
-         * true → false
-         *
-         * Si actualmente es false:
-         *
-         * false → true
-         */
-
-        const nuevoEstado =
-            !boleto.estado;
-
-
-        try {
-
-            const { error } =
-                await supabaseClient
-                    .from("boletos")
-                    .update({
-                        estado: nuevoEstado
-                    })
-                    .eq(
-                        "numero",
-                        boleto.numero
-                    );
-
-
-            if (error) {
-
-                throw error;
-
-            }
-
-
-            console.log(
-                "Boleto actualizado:",
-                boleto.numero,
-                nuevoEstado
-            );
-
-
-            /*
-             * Actualizar el objeto local
-             */
-
-            boleto.estado =
-                nuevoEstado;
-
-
-            /*
-             * Si lo estamos haciendo disponible,
-             * quitarlo de selección.
-             */
-
-            seleccionados.delete(
-                boleto.numero
-            );
-
-
-            mostrarBoletos();
-
-        }
-        catch (error) {
-
-            console.error(error);
-
-            alert(
-                "❌ No se pudo cambiar el boleto.\n\n" +
-                error.message
-            );
-
-        }
-
-    }
-
-
-    /* =====================================================
-       CONTADOR
-    ===================================================== */
-
     function actualizarContador() {
 
         document.getElementById("contador").textContent =
@@ -1004,50 +963,14 @@
     ===================================================== */
 
     function enviarWhatsApp() {
-
-        if (seleccionados.size === 0) {
-
-            alert(
-                "Selecciona al menos un boleto."
-            );
-
+        if (!tokenComprobante) {
+            alert('Primero registra tu apartado para obtener el comprobante.');
+            document.getElementById('apartadoCompra').scrollIntoView({behavior:'smooth'});
             return;
-
         }
-
-
-        const lista =
-            Array.from(seleccionados)
-                .sort((a, b) => a - b);
-
-
-        const mensaje =
-            "Hola, elegí los siguientes boletos: " +
-            lista.join(", ");
-
-
-        const numeroWhatsApp =
-            "528991062860";
-
-
-        const url =
-            "https://wa.me/" +
-            numeroWhatsApp +
-            "?text=" +
-            encodeURIComponent(mensaje);
-
-
-        window.open(
-            url,
-            "_blank"
-        );
-
+        const mensaje = 'Hola, quiero consultar el pago de mi apartado: ' + enlaceComprobante(tokenComprobante);
+        window.open('https://wa.me/528991062860?text=' + encodeURIComponent(mensaje), '_blank', 'noopener,noreferrer');
     }
-
-
-    /* =====================================================
-       INICIAR SESIÓN
-    ===================================================== */
 
     async function iniciarSesion() {
 
@@ -1137,6 +1060,7 @@
     function activarModoAdmin() {
 
         modoAdmin = true;
+        activarVentas();
         cargarConfiguracionRifa();
 
 
@@ -1203,6 +1127,9 @@
 
 
         modoAdmin = false;
+        vaciarVentas();
+        document.getElementById("comprobante").hidden = true;
+        document.getElementById("detalleComprobante").replaceChildren();
         configuracionLista = false;
         document.getElementById("configRifa").reset();
         cargarConfiguracionRifa();
@@ -1444,6 +1371,16 @@
     let consultaComprobanteId = 0;
     let reservaTerminada = false;
 
+    function iniciarOtroApartado() {
+        if (reservando || modoAdmin) return;
+        reservaTerminada = false;
+        seleccionados.clear();
+        document.getElementById('formApartado').reset();
+        document.getElementById('apartadoEstado').textContent = '';
+        mostrarBoletos();
+        document.querySelector('.contenedor-boletos').scrollIntoView({behavior:'smooth'});
+    }
+
     function enlaceComprobante(token) {
         const url = new URL(window.location.href);
         url.hash = 'comprobante=' + encodeURIComponent(token);
@@ -1451,6 +1388,7 @@
     }
 
     function actualizarApartado() {
+        document.getElementById('numerosVentaManual').textContent = seleccionados.size ? 'Números seleccionados: '+[...seleccionados].sort((a,b)=>a-b).join(', ') : 'Sin números seleccionados.';
         document.getElementById('numerosApartado').textContent = seleccionados.size
             ? 'Números elegidos: ' + [...seleccionados].sort((a,b) => a-b).join(', ')
             : 'Selecciona tus números en la lista de boletos.';
@@ -1566,11 +1504,139 @@
     window.addEventListener('hashchange', abrirComprobanteDesdeEnlace);
     abrirComprobanteDesdeEnlace();
 
+    let ventasOffset = 0;
+    let ventasTotal = 0;
+    let ventasConsulta = 0;
+    let ventasOcupado = false;
+    let ventasTimer = null;
+
+    function mensajeVentas(texto) { document.getElementById('ventasEstado').textContent = texto; }
+    function vaciarVentas() {
+        ++ventasConsulta;
+        clearInterval(ventasTimer);
+        ventasTimer = null;
+        document.getElementById('gestionVentas').hidden = true;
+        document.getElementById('listaVentas').replaceChildren();
+        document.getElementById('formVentaManual').reset();
+        mensajeVentas('');
+        ventasOffset = 0;
+    }
+    function activarVentas() {
+        document.getElementById('gestionVentas').hidden = false;
+        ventasOffset = 0;
+        cargarVentas();
+        clearInterval(ventasTimer);
+        ventasTimer = setInterval(() => { if (modoAdmin && !document.hidden && !ventasOcupado) Promise.all([cargarVentas(true), cargarBoletos()]); }, 60000);
+    }
+    function dineroVenta(valor, moneda) {
+        return valor == null ? 'Por confirmar' : new Intl.NumberFormat('es-MX',{style:'currency',currency:moneda || 'MXN'}).format(valor);
+    }
+    async function cargarVentas(silencioso = false) {
+        if (!modoAdmin || ventasOcupado) return;
+        const consulta = ++ventasConsulta;
+        if (!silencioso) mensajeVentas('Cargando apartados y liberando vencidos…');
+        try {
+            const {data,error} = await supabaseClient.rpc('admin_listar_apartados', {
+                p_estado: document.getElementById('filtroVentas').value,
+                p_busqueda: document.getElementById('buscarVentas').value.trim(), p_offset: ventasOffset
+            });
+            if (!modoAdmin || consulta !== ventasConsulta) return;
+            if (error) throw error;
+            ventasTotal = Number(data.total);
+            if (ventasOffset && ventasOffset >= ventasTotal) { ventasOffset=0; return cargarVentas(); }
+            const contenido = document.createDocumentFragment();
+            for (const venta of data.registros) {
+                const card = document.createElement('article'); card.className = 'venta-card';
+                const titulo = document.createElement('h3'); titulo.textContent = 'Folio ' + venta.folio + ' · ' + venta.nombre; card.append(titulo);
+                const nombres = {apartado:'Pendiente de pago',pagado:'Pagado / confirmado',cancelado:'Cancelado',vencido:'Vencido'};
+                const lineas = [
+                    ['Sorteo',venta.rifa],['Teléfono',venta.telefono],['Boletos',venta.numeros.join(', ')],
+                    ['Estado',nombres[venta.estado] || venta.estado],['Total',dineroVenta(venta.total,venta.moneda)],
+                    ['Apartado el',fechaComprobante(venta.creado_en,venta.zona_horaria)],
+                    ['Límite de pago',fechaComprobante(venta.vence_en,venta.zona_horaria)]
+                ];
+                if (venta.pagado_en) lineas.push(['Pago confirmado el',fechaComprobante(venta.pagado_en,venta.zona_horaria)]);
+                for (const [label,value] of lineas) {const p=document.createElement('p');const b=document.createElement('strong');b.textContent=label+': ';p.append(b,document.createTextNode(String(value)));card.append(p);}
+                const enlace=document.createElement('a');enlace.href=enlaceComprobante(venta.token_consulta);enlace.textContent='Ver comprobante';enlace.target='_blank';enlace.rel='noopener';card.append(enlace);
+                if (venta.estado==='apartado' && new Date(venta.vence_en)>new Date()) {
+                    const pago=document.createElement('button');pago.type='button';pago.textContent='Confirmar pago';pago.addEventListener('click',()=>gestionarVenta(venta,'confirmar_pago'));
+                    const cancelar=document.createElement('button');cancelar.type='button';cancelar.className='peligro';cancelar.textContent='Cancelar y liberar';cancelar.addEventListener('click',()=>gestionarVenta(venta,'cancelar'));
+                    const acciones=document.createElement('div');acciones.append(pago,cancelar);card.append(acciones);
+                }
+                contenido.append(card);
+            }
+            document.getElementById('listaVentas').replaceChildren(contenido);
+            document.getElementById('ventasPagina').textContent = ventasTotal ? `${ventasOffset+1}–${Math.min(ventasOffset+25,ventasTotal)} de ${ventasTotal}` : 'Sin registros';
+            document.getElementById('ventasAnterior').disabled=ventasOffset===0;
+            document.getElementById('ventasSiguiente').disabled=ventasOffset+25>=ventasTotal;
+            mensajeVentas(ventasTotal ? 'Lista actualizada. Los vencidos ya se liberaron.' : 'No hay apartados con estos filtros.');
+        } catch(error) {
+            if (consulta!==ventasConsulta || !modoAdmin) return;
+            document.getElementById('listaVentas').replaceChildren();
+            mensajeVentas('No se pudo cargar la gestión. Verifica la conexión y que ejecutaste supabase/gestion-boletos.sql en Supabase. Detalle: '+error.message);
+        }
+    }
+    async function gestionarVenta(venta,accion) {
+        if (!modoAdmin || ventasOcupado) return;
+        const texto=accion==='confirmar_pago'
+            ? `¿Confirmas que recibiste ${dineroVenta(venta.total,venta.moneda)} del folio ${venta.folio}? Confirma solo después de verificar el pago.`
+            : `¿Cancelar el folio ${venta.folio} y liberar sus números?`;
+        if (!window.confirm(texto)) return;
+        ventasOcupado=true;
+        document.querySelectorAll('#listaVentas button').forEach(b=>b.disabled=true);
+        mensajeVentas('Procesando…');
+        let mensaje;
+        try {
+            const {data,error}=await supabaseClient.rpc('admin_gestionar_apartado',{p_id:venta.id,p_accion:accion});
+            if(error)throw error;
+            mensaje=data.mensaje;
+        } catch(error){mensaje='No se pudo completar: '+error.message;}
+        finally {
+            ventasOcupado=false;
+            if(modoAdmin){await Promise.all([cargarVentas(),cargarBoletos()]);mensajeVentas(mensaje);}
+        }
+    }
+    async function registrarVentaManual(event) {
+        event.preventDefault();
+        if(!modoAdmin || ventasOcupado)return;
+        const estado=document.getElementById('ventaManualEstado');
+        const numeros=[...seleccionados].sort((a,b)=>a-b);
+        if(!rifaActual?.activa || !numeros.length){estado.textContent='Publica una rifa y selecciona números disponibles en la cuadrícula.';return;}
+        const pagado=document.getElementById('ventaManualPagada').checked;
+        if(pagado && !window.confirm('¿Ya verificaste que recibiste el pago completo?'))return;
+        ventasOcupado=true;
+        document.getElementById('registrarVentaManual').disabled=true;
+        estado.textContent='Registrando…';
+        try{
+            const {data,error}=await supabaseClient.rpc('admin_registrar_venta',{
+                p_rifa_id:rifaActual.id,p_nombre:document.getElementById('ventaManualNombre').value.trim(),
+                p_telefono:document.getElementById('ventaManualTelefono').value.trim(),p_numeros:numeros,p_pagado:pagado
+            });
+            if(error)throw error;
+            if (!modoAdmin) return;
+            seleccionados.clear();document.getElementById('formVentaManual').reset();
+            estado.textContent='Registro guardado. Folio '+data.folio+' · '+(data.estado==='pagado'?'Pagado / confirmado':'Apartado pendiente de pago');
+            await cargarComprobante(data.token);
+        }catch(error){estado.textContent='No se pudo registrar: '+error.message+' Si hubo una interrupción, revisa la lista antes de repetir.';}
+        finally{
+            ventasOcupado=false;
+            document.getElementById('registrarVentaManual').disabled=false;
+            if(modoAdmin)await Promise.all([cargarVentas(),cargarBoletos()]);
+        }
+    }
+    document.getElementById('formVentaManual').addEventListener('submit',registrarVentaManual);
+    document.getElementById('formBuscarVentas').addEventListener('submit',event=>{event.preventDefault();ventasOffset=0;cargarVentas();});
+    document.getElementById('filtroVentas').addEventListener('change',()=>{ventasOffset=0;cargarVentas();});
+    document.getElementById('ventasAnterior').addEventListener('click',()=>{ventasOffset=Math.max(0,ventasOffset-25);cargarVentas();});
+    document.getElementById('ventasSiguiente').addEventListener('click',()=>{if(ventasOffset+25<ventasTotal){ventasOffset+=25;cargarVentas();}});
+
+    setInterval(() => { if (!modoAdmin && !document.hidden && !reservando) cargarBoletos(); }, 60000);
     iniciarPagina();
 
 </script>
 
 </body>
 </html>
+
 
 
