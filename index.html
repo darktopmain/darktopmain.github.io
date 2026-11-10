@@ -368,6 +368,19 @@
         #guardarRifa { width: 100%; background: #2563eb; color: white; }
         #guardarRifa:disabled { opacity: .6; cursor: wait; }
         #datosRifa { margin-top: 24px; line-height: 1.5; overflow-wrap: anywhere; }
+
+        .reserva-panel { width: 95%; max-width: 900px; margin: 24px auto; padding: 22px; border-radius: 15px; background: rgba(255,255,255,.08); }
+        .reserva-panel label { display: block; margin: 14px 0 6px; }
+        .reserva-panel input { width: 100%; min-width: 0; padding: 12px; border: 0; border-radius: 8px; font-size: 16px; }
+        .reserva-panel button { padding: 12px 18px; border: 0; border-radius: 8px; margin: 8px 8px 0 0; font-size: 16px; cursor: pointer; background: #2563eb; color: white; }
+        .reserva-panel button:disabled { opacity: .5; cursor: default; }
+        .reserva-panel a { color: #93c5fd; overflow-wrap: anywhere; }
+        .reserva-panel p { line-height: 1.5; }
+        #detalleComprobante { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; }
+        #detalleComprobante dt { color: #d1d5db; }
+        #detalleComprobante dd { margin: 0; overflow-wrap: anywhere; font-weight: bold; }
+        .admin-mode #apartadoCompra { display: none; }
+        @media (max-width: 500px) { #detalleComprobante { grid-template-columns: minmax(0, 1fr); gap: 6px; } #detalleComprobante dd { margin-bottom: 10px; } }
     </style>
 </head>
 
@@ -589,6 +602,33 @@
          ACCIONES
     ========================== -->
 
+
+    <section id="apartadoCompra" class="reserva-panel" aria-labelledby="tituloApartado">
+        <h2 id="tituloApartado">Apartar boletos</h2>
+        <p id="numerosApartado">Selecciona tus números en la lista de boletos.</p>
+        <form id="formApartado">
+            <label for="compradorNombre">Nombre completo</label>
+            <input id="compradorNombre" autocomplete="name" minlength="2" maxlength="150" required>
+            <label for="compradorTelefono">Teléfono / WhatsApp</label>
+            <input id="compradorTelefono" type="tel" autocomplete="tel" minlength="7" maxlength="30" required>
+            <p>Tus datos serán visibles para el administrador. El apartado queda pendiente de pago hasta que se confirme.</p>
+            <button id="btnApartar" type="submit" disabled>Apartar boletos</button>
+            <p id="apartadoEstado" role="status"></p>
+        </form>
+    </section>
+    <section id="comprobante" class="reserva-panel" hidden aria-labelledby="tituloComprobante">
+        <h2 id="tituloComprobante">Comprobante de boletos</h2>
+        <p id="comprobanteEstado" role="status"></p>
+        <dl id="detalleComprobante"></dl>
+        <p><strong>Conserva tu enlace privado.</strong> Quien tenga este enlace podrá consultar tu nombre y boletos. Compártelo solo con personas de confianza.</p>
+        <a id="enlaceComprobante"></a>
+        <div>
+            <button type="button" onclick="copiarComprobante()">Copiar enlace</button>
+            <button type="button" onclick="cargarComprobante(tokenComprobante)">Actualizar comprobante</button>
+        </div>
+        <p id="copiarEstado" role="status"></p>
+    </section>
+
     <section class="acciones">
 
         <button
@@ -807,6 +847,7 @@
     ===================================================== */
 
     async function manejarClickBoleto(boleto) {
+        if (reservando || reservaTerminada) return;
 
 
         /* ==============================================
@@ -861,6 +902,11 @@
     ===================================================== */
 
     async function cambiarEstadoBoleto(boleto) {
+        if (boleto.estado !== true) {
+            alert('Para proteger los apartados, los boletos ocupados se gestionarán desde el panel de ventas.');
+            return;
+        }
+
 
         /*
          * Si actualmente es true:
@@ -948,6 +994,7 @@
         document.getElementById("contador").textContent =
             "Boletos seleccionados: " +
             seleccionados.size;
+        actualizarApartado();
 
     }
 
@@ -1341,6 +1388,7 @@
             }
             mostrarDatosRifa();
             estado.textContent = '';
+            actualizarApartado();
         } catch (error) {
             rifaActual = null;
             document.getElementById('datosRifa').textContent = 'Los datos del sorteo todavía no están disponibles.';
@@ -1380,6 +1428,7 @@
             rifaActual = data;
             mostrarDatosRifa();
             estado.textContent = 'Configuración guardada correctamente.';
+            actualizarApartado();
         } catch (error) {
             estado.textContent = 'No se pudo guardar: ' + error.message;
         } finally {
@@ -1390,10 +1439,132 @@
 
     document.getElementById('configRifa').addEventListener('submit', guardarConfiguracionRifa);
 
+    let reservando = false;
+    let tokenComprobante = null;
+    let reservaTerminada = false;
+
+    function enlaceComprobante(token) {
+        const url = new URL(window.location.href);
+        url.hash = 'comprobante=' + encodeURIComponent(token);
+        return url.href;
+    }
+
+    function actualizarApartado() {
+        document.getElementById('numerosApartado').textContent = seleccionados.size
+            ? 'Números elegidos: ' + [...seleccionados].sort((a,b) => a-b).join(', ')
+            : 'Selecciona tus números en la lista de boletos.';
+        document.getElementById('btnApartar').disabled = reservando || reservaTerminada || modoAdmin || !seleccionados.size || !rifaActual?.activa;
+    }
+
+    function fechaComprobante(valor, zona) {
+        return valor ? new Intl.DateTimeFormat('es-MX', {
+            timeZone: zona || 'America/Matamoros', dateStyle: 'long', timeStyle: 'short'
+        }).format(new Date(valor)) : 'Por definir';
+    }
+
+    async function cargarComprobante(token) {
+        const panel = document.getElementById('comprobante');
+        const estado = document.getElementById('comprobanteEstado');
+        panel.hidden = false;
+        tokenComprobante = token;
+        const enlace = document.getElementById('enlaceComprobante');
+        enlace.href = enlaceComprobante(token);
+        enlace.textContent = enlace.href;
+        document.getElementById('detalleComprobante').replaceChildren();
+        estado.textContent = 'Cargando comprobante…';
+        try {
+            const {data: c, error} = await supabaseClient.rpc('consultar_comprobante', {p_token: token});
+            if (error) throw error;
+            if (!c) throw new Error('No se encontró este comprobante. Revisa el enlace.');
+            const estados = {apartado: 'Apartado · pendiente de pago', pagado: 'Pagado / confirmado', vencido: 'Apartado vencido', cancelado: 'Cancelado'};
+            const dinero = n => n == null ? 'Por confirmar' : new Intl.NumberFormat('es-MX', {style:'currency', currency:c.moneda || 'MXN'}).format(n);
+            const campos = [
+                ['Folio', c.folio], ['Sorteo', c.rifa], ['Nombre', c.nombre],
+                ['Boletos', (c.numeros || []).join(', ')], ['Estado', estados[c.estado] || c.estado],
+                ['Precio por boleto', dinero(c.precio_unitario)], ['Total', dinero(c.total)],
+                ['Fecha del sorteo', fechaComprobante(c.fecha_sorteo, c.zona_horaria)],
+                ['Ciudad', c.ciudad || 'Por definir'], ['Zona horaria', c.zona_horaria],
+                ['Apartado el', fechaComprobante(c.creado_en, c.zona_horaria)],
+                ['Límite para pagar', fechaComprobante(c.vence_en, c.zona_horaria)]
+            ];
+            if (c.pagado_en) campos.push(['Pago confirmado el', fechaComprobante(c.pagado_en, c.zona_horaria)]);
+            const detalle = document.getElementById('detalleComprobante');
+            for (const [nombre, valor] of campos) {
+                const dt = document.createElement('dt'); dt.textContent = nombre;
+                const dd = document.createElement('dd'); dd.textContent = valor ?? 'Por definir';
+                detalle.append(dt, dd);
+            }
+            estado.textContent = c.estado === 'apartado'
+                ? 'Este comprobante acredita el apartado; el pago aún debe ser confirmado por el administrador.'
+                : 'Estado actualizado del registro.';
+        } catch (error) {
+            estado.textContent = 'No se pudo consultar: ' + error.message + ' Conserva el enlace y vuelve a intentar.';
+        }
+    }
+
+    async function apartarSeleccion(event) {
+        event.preventDefault();
+        if (reservando || reservaTerminada || modoAdmin) return;
+        const estado = document.getElementById('apartadoEstado');
+        const nombre = document.getElementById('compradorNombre').value.trim();
+        const telefono = document.getElementById('compradorTelefono').value.trim();
+        if (nombre.length < 2 || telefono.length < 7 || !seleccionados.size || !rifaActual?.activa) {
+            estado.textContent = 'Revisa tu nombre, teléfono y selección de boletos.'; return;
+        }
+        reservando = true;
+        actualizarApartado();
+        estado.textContent = 'Registrando apartado. Espera sin volver a enviar…';
+        try {
+            const {data, error} = await supabaseClient.rpc('apartar_boletos', {
+                p_rifa_id: rifaActual.id, p_nombre: nombre, p_telefono: telefono,
+                p_numeros: [...seleccionados].sort((a,b) => a-b)
+            });
+            if (error) throw error;
+            if (!data?.token) throw new Error('No se recibió el enlace del comprobante. Contacta al administrador antes de repetir la compra.');
+            reservaTerminada = true;
+            tokenComprobante = data.token;
+            window.location.hash = 'comprobante=' + encodeURIComponent(data.token);
+            seleccionados.clear();
+            document.getElementById('formApartado').reset();
+            estado.textContent = 'Apartado registrado. Guarda tu enlace privado antes de salir.';
+            await Promise.all([cargarComprobante(data.token), cargarBoletos()]);
+            document.getElementById('comprobante').scrollIntoView({behavior:'smooth', block:'start'});
+        } catch (error) {
+            estado.textContent = 'No se pudo completar: ' + error.message + ' Si perdiste la conexión después de enviar, consulta al administrador antes de repetir.';
+            await cargarBoletos();
+            for (const numero of [...seleccionados]) {
+                if (!boletos.some(b => b.numero === numero && b.estado === true)) seleccionados.delete(numero);
+            }
+            mostrarBoletos();
+        } finally {
+            reservando = false;
+            actualizarApartado();
+        }
+    }
+
+    async function copiarComprobante() {
+        if (!tokenComprobante) return;
+        try {
+            await navigator.clipboard.writeText(enlaceComprobante(tokenComprobante));
+            document.getElementById('copiarEstado').textContent = 'Enlace copiado.';
+        } catch {
+            document.getElementById('copiarEstado').textContent = 'Selecciona y copia el enlace mostrado arriba.';
+        }
+    }
+
+    function abrirComprobanteDesdeEnlace() {
+        const token = new URLSearchParams(window.location.hash.slice(1)).get('comprobante');
+        if (token && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(token)) cargarComprobante(token);
+    }
+    document.getElementById('formApartado').addEventListener('submit', apartarSeleccion);
+    window.addEventListener('hashchange', abrirComprobanteDesdeEnlace);
+    abrirComprobanteDesdeEnlace();
+
     iniciarPagina();
 
 </script>
 
 </body>
 </html>
+
 
