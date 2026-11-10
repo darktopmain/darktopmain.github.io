@@ -1441,6 +1441,7 @@
 
     let reservando = false;
     let tokenComprobante = null;
+    let consultaComprobanteId = 0;
     let reservaTerminada = false;
 
     function enlaceComprobante(token) {
@@ -1463,6 +1464,7 @@
     }
 
     async function cargarComprobante(token) {
+        const consultaId = ++consultaComprobanteId;
         const panel = document.getElementById('comprobante');
         const estado = document.getElementById('comprobanteEstado');
         panel.hidden = false;
@@ -1474,6 +1476,7 @@
         estado.textContent = 'Cargando comprobante…';
         try {
             const {data: c, error} = await supabaseClient.rpc('consultar_comprobante', {p_token: token});
+            if (consultaId !== consultaComprobanteId) return;
             if (error) throw error;
             if (!c) throw new Error('No se encontró este comprobante. Revisa el enlace.');
             const estados = {apartado: 'Apartado · pendiente de pago', pagado: 'Pagado / confirmado', vencido: 'Apartado vencido', cancelado: 'Cancelado'};
@@ -1489,15 +1492,18 @@
             ];
             if (c.pagado_en) campos.push(['Pago confirmado el', fechaComprobante(c.pagado_en, c.zona_horaria)]);
             const detalle = document.getElementById('detalleComprobante');
+            const contenido = document.createDocumentFragment();
             for (const [nombre, valor] of campos) {
                 const dt = document.createElement('dt'); dt.textContent = nombre;
                 const dd = document.createElement('dd'); dd.textContent = valor ?? 'Por definir';
-                detalle.append(dt, dd);
+                contenido.append(dt, dd);
             }
+            detalle.replaceChildren(contenido);
             estado.textContent = c.estado === 'apartado'
                 ? 'Este comprobante acredita el apartado; el pago aún debe ser confirmado por el administrador.'
                 : 'Estado actualizado del registro.';
         } catch (error) {
+            if (consultaId !== consultaComprobanteId) return;
             estado.textContent = 'No se pudo consultar: ' + error.message + ' Conserva el enlace y vuelve a intentar.';
         }
     }
@@ -1523,7 +1529,7 @@
             if (!data?.token) throw new Error('No se recibió el enlace del comprobante. Contacta al administrador antes de repetir la compra.');
             reservaTerminada = true;
             tokenComprobante = data.token;
-            window.location.hash = 'comprobante=' + encodeURIComponent(data.token);
+            window.history.replaceState(null, '', enlaceComprobante(data.token));
             seleccionados.clear();
             document.getElementById('formApartado').reset();
             estado.textContent = 'Apartado registrado. Guarda tu enlace privado antes de salir.';
