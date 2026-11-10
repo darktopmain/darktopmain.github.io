@@ -11,426 +11,165 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
+        :root { color-scheme: light; --ink:#172338; --muted:#657083; --line:#e4e7ed; --paper:#ffffff; --accent:#cf2938; --radius:20px; }
+        * { box-sizing:border-box; }
+        [hidden] { display:none !important; }
+        body { margin:0; background:#f4f5f7; color:var(--ink); font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:15px; line-height:1.5; }
+        button,input,select { font:inherit; }
+        button { cursor:pointer; }
+        button:disabled { cursor:default; opacity:.5; }
+        button:focus-visible,a:focus-visible,summary:focus-visible { outline:3px solid #df8b94; outline-offset:4px; }
+        a { color:#ad2030; text-underline-offset:3px; }
+        h1,h2,h3,p { margin-top:0; }
+        h2 { font-size:23px; letter-spacing:-.6px; margin-bottom:12px; }
+        h3 { font-size:17px; }
+        .barra-superior { background:#162236; color:#fff; }
+        .barra-contenido { width:min(1200px,94%); margin:auto; min-height:76px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+        .marca { display:flex; align-items:center; gap:12px; font-weight:750; letter-spacing:.04em; font-size:14px; }
+        .marca-icono { display:grid; place-items:center; width:36px; height:36px; border-radius:10px; background:var(--accent); color:white; font:700 28px Georgia,serif; }
+        .barra-acciones { display:flex; align-items:center; gap:10px; }
+        .barra-acciones button { padding:10px 16px; border:1px solid #566071; background:transparent; color:white; border-radius:10px; font-size:13px; font-weight:650; }
+        .barra-acciones button:hover { background:#29384e; }
+        #irVentas { display:none; }
+        .admin-mode #irVentas { display:block; }
+        .encabezado-superior { width:min(1200px,94%); margin:30px auto 24px; }
+        header { background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); padding:36px; position:relative; overflow:hidden; }
+        .hero-marca { display:flex; align-items:center; gap:24px; }
+        header img { width:96px; height:96px; object-fit:contain; flex-shrink:0; border:1px solid var(--line); border-radius:16px; padding:6px; background:white; }
+        .etiqueta { color:var(--accent); text-transform:uppercase; font-size:11px; font-weight:800; letter-spacing:.15em; margin:0 0 7px; }
+        header h1 { margin:0 0 6px; font-size:clamp(27px,4vw,40px); letter-spacing:-1.4px; line-height:1.15; }
+        header p { color:var(--muted); margin-bottom:0; }
+        #datosRifa { margin-top:28px; padding-top:24px; border-top:1px solid var(--line); display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; }
+        .dato-rifa { min-width:0; }
+        .dato-rifa span { display:block; color:var(--muted); font-size:12px; margin-bottom:5px; }
+        .dato-rifa strong { display:block; font-size:16px; font-weight:650; overflow-wrap:anywhere; }
+        .dato-rifa.nombre-rifa { grid-column:1/-1; display:flex; gap:10px; align-items:center; }
+        .dato-rifa.nombre-rifa span { margin:0; }
+        .dato-rifa.nombre-rifa strong { color:var(--accent); }
+        dialog { width:min(760px,calc(100% - 28px)); max-height:90dvh; padding:0; border:1px solid var(--line); border-radius:24px; color:var(--ink); background:white; box-shadow:0 30px 100px #08122255; }
+        dialog::backdrop { background:#101b2db3; backdrop-filter:blur(5px); }
+        .dialogo-cabecera { display:flex; align-items:center; justify-content:space-between; gap:20px; padding:22px 28px; border-bottom:1px solid var(--line); }
+        .dialogo-cabecera h2 { margin:0; font-size:20px; }
+        .cerrar-dialogo { border:1px solid var(--line); border-radius:10px; width:36px; height:36px; background:#f5f6f8; color:var(--ink); font-size:24px; line-height:1; }
+        .admin-panel { padding:26px 28px; }
+        .admin-panel>h2 { display:none; }
+        #loginFormulario { max-width:380px; margin:0 auto; }
+        .admin-panel label,.reserva-panel label { display:block; font-size:13px; font-weight:650; margin-bottom:7px; }
+        input:not([type=checkbox]),select { width:100%; min-width:0; padding:12px 13px; background:#fafbfc; color:var(--ink); border:1px solid #d8dde5; border-radius:10px; outline:none; transition:border-color .15s,box-shadow .15s; }
+        input:focus,select:focus { border-color:#bd5561; box-shadow:0 0 0 3px #cf293812; }
+        #loginFormulario input { margin-bottom:16px; }
+        input[type=checkbox] { accent-color:var(--accent); width:17px; height:17px; vertical-align:middle; margin-right:7px; }
+        button:not(.cerrar-dialogo) { transition:background .15s,transform .15s; }
+        .admin-panel button,.reserva-panel button,#btnWhatsapp { border:0; border-radius:10px; padding:11px 17px; background:var(--accent); color:white; font-weight:650; font-size:13px; }
+        .admin-panel button:hover,.reserva-panel button:hover { filter:brightness(.94); }
+        #btnLogin { width:100%; }
+        #configRifa { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; text-align:left; }
+        .config-intro,.config-publicar,.config-acciones,#configEstado { grid-column:1/-1; }
+        .config-intro h3 { margin-bottom:4px; font-size:20px; }
+        .config-intro p,.admin-panel small { color:var(--muted); font-size:12px; font-weight:400; }
+        .config-intro p { margin:0; }
+        .admin-panel small { display:block; margin-top:7px; line-height:1.5; }
+        .config-publicar { background:#f6f7f9; border:1px solid var(--line); border-radius:12px; padding:15px; }
+        .config-publicar label { margin:0; }
+        .config-acciones { display:flex; align-items:center; gap:10px; padding-top:4px; }
+        .admin-panel .secundario,.reserva-panel .secundario { background:#edf0f5; color:var(--ink); }
+        #configEstado:empty { display:none; }
+        #configEstado { margin:0; font-size:13px; overflow-wrap:anywhere; }
+        .sesion-pie { border-top:1px solid var(--line); margin-top:24px; padding-top:18px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+        .sesion-pie span { color:#187343; font-size:12px; font-weight:650; }
+        #btnLogout { color:#aa2535; background:#fcebef; }
+        #adminEstado { font-size:12px; color:var(--muted); text-align:center; margin-top:18px; }
+        #adminEstado.admin-activo { display:none; }
+        .pagos { width:min(1200px,94%); margin:24px auto; display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px; }
+        .pago { padding:22px 26px; background:white; border:1px solid var(--line); border-radius:16px; }
+        .pago h3 { margin:0 0 14px; font-size:12px; letter-spacing:.1em; color:#187343; }
+        .pago p { margin:4px 0; font-size:14px; overflow-wrap:anywhere; }
+        .pago p:has(strong) { color:var(--muted); font-size:11px; margin-top:10px; }
+        .leyenda { width:min(1200px,94%); margin:26px auto 14px; display:flex; justify-content:flex-end; flex-wrap:wrap; gap:20px; color:var(--muted); font-size:12px; }
+        .leyenda-item { display:flex; align-items:center; gap:7px; }
+        .color { width:11px; height:11px; border-radius:4px; }
+        .verde { background:#23885a; } .gris { background:#cdd4df; } .rojo { background:var(--accent); }
+        .contenedor-boletos { width:min(1200px,94%); margin:0 auto 24px; background:white; border:1px solid var(--line); padding:26px; border-radius:var(--radius); }
+        .titulo-boletos { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:18px; }
+        .titulo-boletos h2 { margin:0; }
+        #cargando { font-size:13px; color:var(--muted); }
+        .grid-boletos { display:grid; grid-template-columns:repeat(15,minmax(0,1fr)); gap:7px; max-height:550px; overflow-y:auto; padding:4px; }
+        .boleto { border:1px solid transparent; border-radius:8px; padding:10px 2px; font-size:13px; font-weight:650; min-height:42px; cursor:pointer; }
+        .boleto.disponible { background:#edf7f1; color:#19623f; border-color:#d6ecdf; }
+        .boleto.disponible:hover { background:#d5eddf; transform:translateY(-1px); }
+        .boleto.ocupado { background:#edf0f4; color:#939dab; cursor:not-allowed; }
+        .admin-mode .boleto.ocupado { cursor:pointer; }
+        .boleto.seleccionado { background:var(--accent); color:white; border-color:var(--accent); }
+        .reserva-panel { width:min(1200px,94%); margin:24px auto; background:white; border:1px solid var(--line); padding:28px; border-radius:var(--radius); }
+        .reserva-panel>p { color:var(--muted); font-size:13px; }
+        .reserva-panel p { overflow-wrap:anywhere; }
+        #formApartado { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 20px; }
+        #formApartado label { margin-top:12px; }
+        #formApartado>p,#formApartado>button,#apartadoEstado { grid-column:1/-1; }
+        #formApartado>p { margin:16px 0; color:var(--muted); font-size:12px; }
+        #btnApartar { justify-self:start; min-width:180px; }
+        #formApartado>label,#formApartado>input { grid-column:1/-1; }
+        #formApartado input { max-width:600px; }
+        #detalleComprobante { display:grid; grid-template-columns:minmax(120px,1fr) minmax(0,3fr); gap:0; border-top:1px solid var(--line); }
+        #detalleComprobante dt,#detalleComprobante dd { padding:13px 0; border-bottom:1px solid var(--line); margin:0; font-size:14px; overflow-wrap:anywhere; }
+        #detalleComprobante dt { color:var(--muted); } #detalleComprobante dd { font-weight:650; }
+        #enlaceComprobante { display:block; font-size:12px; overflow-wrap:anywhere; margin-bottom:15px; }
+        #comprobante button { margin:5px 7px 5px 0; }
+        .admin-mode #apartadoCompra,.admin-mode #nuevaCompra { display:none; }
+        .acciones { width:min(1200px,94%); margin:24px auto 48px; text-align:center; }
+        #btnWhatsapp { background:#187a4d; }
+        #contador { color:var(--muted); font-size:12px; margin-top:10px; }
+        #gestionVentas>p { max-width:760px; }
+        #gestionVentas details { border:1px solid var(--line); border-radius:12px; padding:16px 20px; background:#fafbfc; margin:20px 0; }
+        #gestionVentas summary { cursor:pointer; font-weight:650; font-size:14px; }
+        #gestionVentas details p { font-size:13px; color:var(--muted); }
+        #formVentaManual { max-width:650px; }
+        #formVentaManual label { margin-top:15px; }
+        #formVentaManual button { margin-top:15px; }
+        #formBuscarVentas { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr) auto; align-items:end; gap:14px; margin-top:22px; }
+        #formBuscarVentas button { min-height:47px; }
+        #listaVentas { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
+        .venta-card { border:1px solid var(--line); border-radius:14px; padding:22px; min-width:0; overflow-wrap:anywhere; }
+        .venta-card h3 { margin-bottom:15px; }
+        .venta-card p { font-size:13px; margin:7px 0; color:var(--muted); }
+        .venta-card p strong { color:var(--ink); font-weight:550; }
+        .venta-card a { font-size:13px; display:inline-block; margin:12px 0; }
+        .venta-card button { margin:4px 7px 0 0; }
+        .venta-card .peligro { background:#fcebef; color:#aa2535; }
+        .ventas-paginacion { display:flex; justify-content:flex-end; gap:12px; align-items:center; margin-top:22px; font-size:12px; color:var(--muted); }
+        #ventasEstado { font-size:13px; }
+        @media(max-width:900px) { .grid-boletos { grid-template-columns:repeat(10,minmax(0,1fr)); } #datosRifa { grid-template-columns:repeat(2,minmax(0,1fr)); } #formBuscarVentas { grid-template-columns:minmax(0,2fr) minmax(0,1fr); } #formBuscarVentas button { grid-column:1/-1; justify-self:start; } }
+        @media(max-width:600px) { .barra-contenido { min-height:66px; } .marca { font-size:11px; gap:8px; } .marca-icono { width:28px; height:28px; font-size:23px; } .barra-acciones { gap:6px; } .barra-acciones button { padding:8px 10px; font-size:11px; } #irVentas { max-width:90px; } .encabezado-superior { margin-top:18px; } header { padding:23px; } .hero-marca { gap:16px; } header img { width:65px; height:65px; border-radius:12px; } header h1 { font-size:25px; letter-spacing:-.8px; } header .etiqueta { font-size:9px; } header p { font-size:12px; } #datosRifa { gap:16px; margin-top:22px; } .dato-rifa strong { font-size:14px; } .pagos { grid-template-columns:minmax(0,1fr); gap:12px; } .pago { padding:18px 22px; } .leyenda { justify-content:center; gap:14px; } .contenedor-boletos,.reserva-panel { padding:20px; border-radius:16px; } .grid-boletos { grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; } .boleto { min-height:43px; } #listaVentas { grid-template-columns:minmax(0,1fr); } #formBuscarVentas { grid-template-columns:minmax(0,1fr); } #formBuscarVentas button { width:100%; } .dialogo-cabecera { padding:19px 20px; } .admin-panel { padding:22px 20px; } #configRifa { grid-template-columns:minmax(0,1fr); gap:17px; } .config-acciones { flex-direction:column; align-items:stretch; } .sesion-pie { flex-wrap:wrap; } #detalleComprobante { grid-template-columns:minmax(0,1fr) minmax(0,1.5fr); } }
 
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #111827, #1f2937);
-            color: white;
-        }
-
-        /* =========================
-           ENCABEZADO
-        ========================= */
-
-        .encabezado-superior {
-            width: 95%;
-            max-width: 1200px;
-            margin: 20px auto;
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(260px, 320px);
-            align-items: start;
-            gap: 20px;
-        }
-
-        header {
-            text-align: center;
-            padding: 25px 15px;
-        }
-
-        header img {
-            max-width: 220px;
-            height: auto;
-            margin-bottom: 10px;
-        }
-
-        header h1 {
-            margin: 10px 0 5px;
-            font-size: 32px;
-        }
-
-        header p {
-            margin: 0;
-            color: #d1d5db;
-        }
-
-        /* =========================
-           INFORMACIÓN DE PAGO
-        ========================= */
-
-        .pagos {
-            width: 95%;
-            max-width: 900px;
-            margin: 20px auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 15px;
-        }
-
-        .pago {
-            background: rgba(255,255,255,0.08);
-            border-radius: 15px;
-            padding: 18px;
-            text-align: center;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-        }
-
-        .pago h3 {
-            margin-top: 0;
-            color: #22c55e;
-        }
-
-        .pago p {
-            margin: 7px 0;
-        }
-
-        /* =========================
-           LEYENDA
-        ========================= */
-
-        .leyenda {
-            width: 95%;
-            max-width: 900px;
-            margin: 20px auto;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .leyenda-item {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-        }
-
-        .color {
-            width: 22px;
-            height: 22px;
-            border-radius: 5px;
-            border: 1px solid rgba(255,255,255,0.4);
-        }
-
-        .verde {
-            background: #1f8f1f;
-        }
-
-        .gris {
-            background: #cfcfcf;
-        }
-
-        .rojo {
-            background: #d62b2b;
-        }
-
-        /* =========================
-           CONTENEDOR BOLETOS
-        ========================= */
-
-        .contenedor-boletos {
-            width: 95%;
-            max-width: 1200px;
-            margin: 20px auto;
-            background: rgba(255,255,255,0.06);
-            padding: 15px;
-            border-radius: 15px;
-        }
-
-        .titulo-boletos {
-            text-align: center;
-            margin-bottom: 15px;
-        }
-
-        .grid-boletos {
-            display: grid;
-            grid-template-columns: repeat(15, minmax(55px, 1fr));
-            gap: 5px;
-            max-height: 650px;
-            overflow-y: auto;
-            padding: 5px;
-        }
-
-        /* =========================
-           BOLETO
-        ========================= */
-
-        .boleto {
-            border: none;
-            border-radius: 6px;
-            padding: 10px 3px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: 0.15s;
-            min-height: 42px;
-            color: white;
-        }
-
-        .boleto.disponible {
-            background: #1f8f1f;
-        }
-
-        .boleto.disponible:hover {
-            background: #27b327;
-            transform: scale(1.05);
-        }
-
-        .boleto.ocupado {
-            background: #cfcfcf;
-            color: #333;
-            cursor: not-allowed;
-        }
-
-        .boleto.seleccionado {
-            background: #d62b2b;
-            color: white;
-        }
-
-        .boleto.seleccionado:hover {
-            background: #ef3b3b;
-        }
-
-        /* MODO ADMIN */
-
-        .admin-mode .boleto.ocupado {
-            cursor: pointer;
-        }
-
-        .admin-mode .boleto.disponible {
-            cursor: pointer;
-        }
-
-        .admin-mode .boleto:hover {
-            transform: scale(1.05);
-        }
-
-        /* =========================
-           WHATSAPP
-        ========================= */
-
-        .acciones {
-            text-align: center;
-            margin: 25px auto;
-        }
-
-        #btnWhatsapp {
-            border: none;
-            background: #25D366;
-            color: white;
-            padding: 15px 25px;
-            border-radius: 10px;
-            font-size: 17px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        #btnWhatsapp:hover {
-            background: #1ebe5d;
-        }
-
-        #contador {
-            margin-top: 10px;
-            color: #d1d5db;
-        }
-
-        /* =========================
-           ADMIN
-        ========================= */
-
-        .admin-panel {
-            width: 100%;
-            max-width: 320px;
-            margin: 0;
-            justify-self: end;
-            background: rgba(255,255,255,0.08);
-            padding: 20px;
-            border-radius: 15px;
-            text-align: center;
-        }
-
-        .admin-panel h2 {
-            margin-top: 0;
-        }
-
-        .admin-panel input {
-            width: 100%;
-            padding: 12px;
-            margin: 7px 0;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-        }
-
-        .admin-panel button {
-            border: none;
-            border-radius: 8px;
-            padding: 12px 20px;
-            font-weight: bold;
-            cursor: pointer;
-            margin-top: 8px;
-        }
-
-        #btnLogin {
-            background: #2563eb;
-            color: white;
-            width: 100%;
-        }
-
-        #btnLogin:hover {
-            background: #1d4ed8;
-        }
-
-        #btnLogout {
-            background: #dc2626;
-            color: white;
-        }
-
-        #btnLogout:hover {
-            background: #b91c1c;
-        }
-
-        #adminEstado {
-            margin-top: 12px;
-            font-weight: bold;
-        }
-
-        .admin-activo {
-            color: #22c55e;
-        }
-
-        .admin-inactivo {
-            color: #f87171;
-        }
-
-        /* =========================
-           CARGANDO
-        ========================= */
-
-        #cargando {
-            text-align: center;
-            padding: 25px;
-            font-size: 18px;
-        }
-
-        /* =========================
-           RESPONSIVE
-        ========================= */
-
-        @media (max-width: 800px) {
-
-            .grid-boletos {
-                grid-template-columns: repeat(10, minmax(50px, 1fr));
-            }
-
-        }
-
-        @media (max-width: 600px) {
-
-            .encabezado-superior {
-                grid-template-columns: minmax(0, 1fr);
-                gap: 15px;
-            }
-
-            .encabezado-superior .admin-panel {
-                grid-row: 1;
-            }
-
-        }
-
-        @media (max-width: 500px) {
-
-            header h1 {
-                font-size: 25px;
-            }
-
-            .grid-boletos {
-                grid-template-columns: repeat(5, minmax(50px, 1fr));
-            }
-
-            .boleto {
-                padding: 9px 2px;
-            }
-
-        }
-
-
-        .admin-panel select { width: 100%; padding: 10px; margin: 7px 0; border-radius: 8px; font-size: 16px; }
-        .admin-panel input { min-width: 0; }
-        .admin-panel input[type="checkbox"] { width: auto; }
-        #configRifa { text-align: left; margin-top: 20px; }
-        #configRifa label { display: block; margin-top: 12px; }
-        #configRifa small { display: block; color: #d1d5db; }
-        #configEstado { overflow-wrap: anywhere; }
-        #guardarRifa { width: 100%; background: #2563eb; color: white; }
-        #guardarRifa:disabled { opacity: .6; cursor: wait; }
-        #datosRifa { margin-top: 24px; line-height: 1.5; overflow-wrap: anywhere; }
-
-        .reserva-panel { width: 95%; max-width: 900px; margin: 24px auto; padding: 22px; border-radius: 15px; background: rgba(255,255,255,.08); }
-        .reserva-panel label { display: block; margin: 14px 0 6px; }
-        .reserva-panel input { width: 100%; min-width: 0; padding: 12px; border: 0; border-radius: 8px; font-size: 16px; }
-        .reserva-panel button { padding: 12px 18px; border: 0; border-radius: 8px; margin: 8px 8px 0 0; font-size: 16px; cursor: pointer; background: #2563eb; color: white; }
-        .reserva-panel button:disabled { opacity: .5; cursor: default; }
-        .reserva-panel a { color: #93c5fd; overflow-wrap: anywhere; }
-        .reserva-panel p { line-height: 1.5; }
-        #detalleComprobante { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; }
-        #detalleComprobante dt { color: #d1d5db; }
-        #detalleComprobante dd { margin: 0; overflow-wrap: anywhere; font-weight: bold; }
-        .admin-mode #apartadoCompra, .admin-mode #nuevaCompra { display: none; }
-        @media (max-width: 500px) { #detalleComprobante { grid-template-columns: minmax(0, 1fr); gap: 6px; } #detalleComprobante dd { margin-bottom: 10px; } }
-
-        #gestionVentas select { width: 100%; padding: 12px; border-radius: 8px; font-size: 16px; }
-        #gestionVentas input[type="checkbox"] { width: auto; }
-        #gestionVentas details { padding: 16px; border: 1px solid #64748b; border-radius: 10px; margin-bottom: 20px; }
-        #gestionVentas summary { cursor: pointer; font-weight: bold; }
-        .venta-card { padding: 18px 0; border-bottom: 1px solid #64748b; overflow-wrap: anywhere; }
-        .venta-card .peligro { background: #b91c1c; }
-        .ventas-paginacion { margin-top: 20px; }
-        #ventasEstado { overflow-wrap: anywhere; }
     </style>
 </head>
 
 <body>
 
-    <!-- =========================
-         ENCABEZADO
-    ========================== -->
-
-    <div class="encabezado-superior">
-
-    <header>
-
-        <img src="NOMBRE-DE-TU-IMAGEN.png" alt="Rifa & Asociados">
-
-        <h1>Rifa & Asociados</h1>
-
-        <p>Selecciona tus boletos disponibles</p>
-        <div id="datosRifa" aria-live="polite">Cargando datos del sorteo…</div>
-
-    </header>
-
-    <!-- =========================
-         ADMINISTRADOR
-    ========================== -->
-
+    <nav class="barra-superior" aria-label="Navegación principal"><div class="barra-contenido">
+        <div class="marca"><span class="marca-icono" aria-hidden="true">&amp;</span> RIFA &amp; ASOCIADOS</div>
+        <div class="barra-acciones"><button id="irVentas" type="button" onclick="document.getElementById('gestionVentas').scrollIntoView({behavior:'smooth'})">Apartados y ventas</button><button id="abrirAdmin" type="button" onclick="document.getElementById('panelAdmin').showModal()">Administrador</button></div>
+    </div></nav>
+    <dialog id="panelAdmin" aria-labelledby="tituloPanelAdmin">
+        <div class="dialogo-cabecera"><h2 id="tituloPanelAdmin">Administración</h2><button type="button" class="cerrar-dialogo" onclick="document.getElementById('panelAdmin').close()" aria-label="Cerrar panel">×</button></div>
     <section class="admin-panel">
 
         <h2>🔐 Administrador</h2>
 
         <div id="loginFormulario">
+            <p>Accede para configurar tu rifa y gestionar las ventas.</p>
+            <label for="emailAdmin">Correo electrónico</label>
 
             <input
                 type="email"
-                id="emailAdmin"
+                id="emailAdmin" autocomplete="username"
                 placeholder="Correo de administrador"
             >
 
+            <label for="passwordAdmin">Contraseña</label>
             <input
                 type="password"
-                id="passwordAdmin"
+                id="passwordAdmin" autocomplete="current-password"
                 placeholder="Contraseña"
             >
 
@@ -446,15 +185,11 @@
 
         <div id="adminSesion" style="display:none;">
             <form id="configRifa">
-                <h3>Configuración de la rifa</h3>
-                <label for="rifaNombre">Nombre de la rifa</label>
-                <input id="rifaNombre" required maxlength="150">
-                <label for="rifaPrecio">Precio por boleto (MXN)</label>
-                <input id="rifaPrecio" type="number" min="0" max="9999999999.99" step="0.01" required>
-                <label for="rifaCiudad">Ciudad del sorteo</label>
-                <input id="rifaCiudad" maxlength="150" placeholder="Por definir">
-                <label for="rifaZona">Zona horaria del sorteo</label>
-                <select id="rifaZona" required>
+                <div class="config-intro"><h3>Configura tu sorteo</h3><p>Actualiza la información que verán tus compradores.</p></div>
+                <div class="campo"><label for="rifaNombre">Nombre de la rifa</label><input id="rifaNombre" required maxlength="150"></div>
+                <div class="campo"><label for="rifaPrecio">Precio por boleto · MXN</label><input id="rifaPrecio" type="number" min="0" max="9999999999.99" step="0.01" required></div>
+                <div class="campo"><label for="rifaCiudad">Ciudad del sorteo</label><input id="rifaCiudad" maxlength="150" placeholder="Por definir"></div>
+                <div class="campo"><label for="rifaZona">Zona horaria</label><select id="rifaZona" required>
                     <option value="America/Matamoros">Reynosa / Matamoros</option>
                     <option value="America/Mexico_City">Ciudad de México / Tampico</option>
                     <option value="America/Monterrey">Monterrey</option>
@@ -464,35 +199,16 @@
                     <option value="America/Mazatlan">Mazatlán</option>
                     <option value="America/Chihuahua">Chihuahua</option>
                     <option value="America/Ciudad_Juarez">Ciudad Juárez</option>
-                </select>
-                <label for="rifaFecha">Fecha y hora del sorteo</label>
-                <input id="rifaFecha" type="datetime-local">
-                <small>Hora de la zona seleccionada. Déjala vacía si está por definir.</small>
-                <label for="rifaPlazo">Plazo para pagar (horas)</label>
-                <input id="rifaPlazo" type="number" min="1" max="720" step="1" value="24" required>
-                <label><input id="rifaActiva" type="checkbox" checked> Publicar datos de la rifa</label>
-                <small>Este formulario configura la rifa actual; no reinicia los boletos.</small>
-                <button id="guardarRifa" type="submit" disabled>Guardar configuración</button>
+                </select></div>
+                <div class="campo"><label for="rifaFecha">Fecha y hora del sorteo</label><input id="rifaFecha" type="datetime-local"><small>Déjala vacía si está por definir. Se usa la zona horaria seleccionada.</small></div>
+                <div class="campo"><label for="rifaPlazo">Plazo para pagar · horas</label><input id="rifaPlazo" type="number" min="1" max="720" step="1" value="24" required></div>
+                <div class="config-publicar"><label><input id="rifaActiva" type="checkbox" checked> Publicar datos de la rifa</label><small>Los boletos y ventas actuales se conservan.</small></div>
+                <div class="config-acciones"><button id="guardarRifa" type="submit" disabled>Guardar cambios</button><button class="secundario" type="button" onclick="cargarConfiguracionRifa()">Volver a cargar</button></div>
                 <p id="configEstado" role="status"></p>
-                <button type="button" onclick="cargarConfiguracionRifa()">Volver a cargar</button>
             </form>
 
 
-            <p class="admin-activo">
-                🟢 Modo administrador activo
-            </p>
-
-            <p>
-                Selecciona números disponibles para registrar una venta.
-                Gestiona pagos y cancelaciones en Apartados y ventas.
-            </p>
-
-            <button
-                id="btnLogout"
-                onclick="cerrarSesion()"
-            >
-                Cerrar sesión
-            </button>
+            <div class="sesion-pie"><span>● Sesión de administrador activa</span><button id="btnLogout" type="button" onclick="cerrarSesion()">Cerrar sesión</button></div>
 
         </div>
 
@@ -505,6 +221,30 @@
         </div>
 
     </section>
+    </dialog>
+
+
+    <!-- =========================
+         ENCABEZADO
+    ========================== -->
+
+    <div class="encabezado-superior">
+
+    <header>
+
+        <div class="hero-marca">
+            <img src="NOMBRE-DE-TU-IMAGEN.png" alt="Rifa & Asociados">
+            <div><p class="etiqueta">Elige tus números · Participa</p><h1>Rifa &amp; Asociados</h1><p>Tu siguiente oportunidad empieza con un número.</p></div>
+        </div>
+        <div id="datosRifa" aria-live="polite">Cargando datos del sorteo…</div>
+
+    </header>
+
+    <!-- =========================
+         ADMINISTRADOR
+    ========================== -->
+
+
 
     </div>
 
@@ -515,8 +255,8 @@
 
 
     <section id="gestionVentas" class="reserva-panel" hidden aria-labelledby="tituloVentas">
-        <h2 id="tituloVentas">Apartados y ventas</h2>
-        <p>Solo administradores. Los apartados vencidos se liberan al actualizar. El cron de Supabase también los revisa cada minuto.</p>
+        <p class="etiqueta">Panel de control</p><h2 id="tituloVentas">Apartados y ventas</h2>
+        <p>Consulta tus ventas, verifica los pagos y administra las reservas.</p>
         <details>
             <summary>Registrar venta por WhatsApp o en persona</summary>
             <p>Selecciona los números disponibles en la cuadrícula y llena los datos.</p>
@@ -532,14 +272,12 @@
             </form>
         </details>
         <form id="formBuscarVentas">
-            <label for="buscarVentas">Buscar por nombre, teléfono o folio</label>
-            <input id="buscarVentas" type="search" maxlength="150">
-            <label for="filtroVentas">Estado</label>
-            <select id="filtroVentas">
+            <div><label for="buscarVentas">Buscar apartado</label><input id="buscarVentas" type="search" maxlength="150" placeholder="Nombre, teléfono o folio"></div>
+            <div><label for="filtroVentas">Estado</label><select id="filtroVentas">
                 <option value="todos">Todos</option><option value="apartado">Pendientes de pago</option>
                 <option value="pagado">Pagados</option><option value="vencido">Vencidos</option><option value="cancelado">Cancelados</option>
-            </select>
-            <button type="submit">Buscar / actualizar y liberar vencidos</button>
+            </select></div>
+            <button type="submit">Actualizar lista</button>
         </form>
         <p id="ventasEstado" role="status"></p>
         <div id="listaVentas"></div>
@@ -1060,6 +798,8 @@
     function activarModoAdmin() {
 
         modoAdmin = true;
+        document.getElementById('abrirAdmin').textContent = 'Configuración';
+        document.getElementById('panelAdmin').close();
         activarVentas();
         cargarConfiguracionRifa();
 
@@ -1127,6 +867,8 @@
 
 
         modoAdmin = false;
+        document.getElementById('abrirAdmin').textContent = 'Administrador';
+        document.getElementById('panelAdmin').close();
         vaciarVentas();
         document.getElementById("comprobante").hidden = true;
         document.getElementById("detalleComprobante").replaceChildren();
@@ -1279,14 +1021,17 @@
         const fecha = r.fecha_sorteo
             ? new Intl.DateTimeFormat('es-MX', {timeZone: r.zona_horaria, dateStyle: 'long', timeStyle: 'short'}).format(new Date(r.fecha_sorteo)) + ' (' + r.zona_horaria + ')'
             : 'Por definir';
-        const lineas = [r.nombre,
-            'Precio por boleto: ' + new Intl.NumberFormat('es-MX', {style: 'currency', currency: r.moneda}).format(r.precio_boleto) + ' ' + r.moneda,
-            'Sorteo: ' + fecha, 'Ciudad: ' + (r.ciudad || 'Por definir'),
-            'Plazo para pagar: ' + r.plazo_pago_horas + ' horas después de apartar'];
-        for (const texto of lineas) {
-            const p = document.createElement('p');
-            p.textContent = texto;
-            resumen.appendChild(p);
+        const datos = [
+            ['Sorteo actual',r.nombre,'nombre-rifa'],
+            ['Precio por boleto',new Intl.NumberFormat('es-MX',{style:'currency',currency:r.moneda}).format(r.precio_boleto)+' '+r.moneda],
+            ['Fecha del sorteo',fecha], ['Ciudad',r.ciudad || 'Por definir'],
+            ['Tiempo para pagar',r.plazo_pago_horas+' horas']
+        ];
+        for (const [etiqueta,valor,clase] of datos) {
+            const bloque=document.createElement('div');bloque.className='dato-rifa'+(clase?' '+clase:'');
+            const label=document.createElement('span');label.textContent=etiqueta;
+            const dato=document.createElement('strong');dato.textContent=valor;
+            bloque.append(label,dato);resumen.append(bloque);
         }
     }
 
@@ -1637,6 +1382,7 @@
 
 </body>
 </html>
+
 
 
 
